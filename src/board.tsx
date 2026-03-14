@@ -10,7 +10,7 @@ class CandidateCell extends React.Component<{ number: number; visible: boolean }
   }
 }
 
-interface CellProps {
+export interface CellProps {
   value?: number;
   candidates?: number[];
   valid?: boolean;
@@ -63,7 +63,7 @@ class Cell extends React.Component<CellProps> {
   }
 }
 
-interface BoardProps {
+export interface BoardProps {
   cells: CellProps[][];
 }
 
