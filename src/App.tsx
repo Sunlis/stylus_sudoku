@@ -1,9 +1,30 @@
 import React from 'react';
+import { Board } from './board';
+
+const cells = [
+  [
+    {
+      value: 1,
+    },
+    {},
+    {},
+  ],
+  [
+    {},
+    {},
+    {},
+  ],
+  [
+    {},
+    {},
+    {},
+  ]
+];
 
 function App() {
   return (
     <main style={{ padding: '1.5rem', fontFamily: 'system-ui, sans-serif' }}>
-      <div>we did it</div>
+      <Board cells={cells} />
     </main>
   );
 }
