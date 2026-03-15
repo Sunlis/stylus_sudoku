@@ -17,11 +17,16 @@ class CandidateCell extends React.Component<{ number: number; visible: boolean }
   }
 }
 
-export interface CellProps {
+interface CellContents {
   value?: number;
   candidates?: number[];
   valid?: boolean;
   user?: boolean;
+}
+
+export interface CellProps extends CellContents {
+  column: number;
+  row: number;
 }
 
 class Cell extends React.Component<CellProps> {
@@ -54,6 +59,14 @@ class Cell extends React.Component<CellProps> {
     let weight = 'normal';
     let bg = 'unset';
     let fontSize = '1rem';
+    let borderLeft = 1;
+    let borderTop = 1;
+    if (this.props.column % 3 === 0) {
+      borderLeft = 2;
+    }
+    if (this.props.row % 3 === 0) {
+      borderTop = 2;
+    }
     if (this.props.value !== undefined) {
       weight = '500';
       if (this.props.user) {
@@ -68,9 +81,12 @@ class Cell extends React.Component<CellProps> {
     if (this.props.valid === false) {
       bg = '#ffcccc';
     }
+
     return (
       <div style={{
           border: '1px solid black',
+          borderLeftWidth: borderLeft,
+          borderTopWidth: borderTop,
           borderRight: 'none',
           borderBottom: 'none',
           boxSizing: 'border-box',
@@ -91,7 +107,7 @@ class Cell extends React.Component<CellProps> {
 }
 
 export interface BoardProps {
-  cells: CellProps[][];
+  cells: CellContents[][];
 }
 
 export class Board extends React.Component<BoardProps> {
@@ -102,7 +118,7 @@ export class Board extends React.Component<BoardProps> {
           flexDirection: 'column',
           alignItems: 'center' }}>
         <div style={{
-          border: '1px solid black',
+          border: '2px solid black',
           borderLeft: 'none',
           borderTop: 'none',
           boxSizing: 'border-box',
@@ -112,7 +128,7 @@ export class Board extends React.Component<BoardProps> {
               return (<div key={rowIndex} style={{ display: 'flex', flexDirection: 'row' }}>
                 {
                   Array.from({ length: 9 }, (_, colIndex) => {
-                    return <Cell key={colIndex} {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
+                    return <Cell key={colIndex} column={colIndex} row={rowIndex} {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
                   })
                 }
               </div>
