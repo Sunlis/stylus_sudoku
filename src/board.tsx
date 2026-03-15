@@ -3,7 +3,14 @@ import React from 'react';
 class CandidateCell extends React.Component<{ number: number; visible: boolean }> {
   render() {
     return (
-      <div style={{ flex: '1', textAlign: 'center', width: '3vw', height: '3vw' }}>
+      <div style={{
+          textAlign: 'center',
+          width: '3vw',
+          height: '3vw',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
         {this.props.visible ? this.props.number : ' '}
       </div>
     );
@@ -24,7 +31,7 @@ class Cell extends React.Component<CellProps> {
       interior = <div>{this.props.value}</div>;
     } else if (this.props.candidates !== undefined) {
       interior = (
-        <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.1em' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.55em' }}>
           <div style={{ display: 'flex', flexDirection: 'row' }}>
             <CandidateCell number={1} visible={this.props.candidates.includes(1)} />
             <CandidateCell number={2} visible={this.props.candidates.includes(2)} />
@@ -43,6 +50,24 @@ class Cell extends React.Component<CellProps> {
         </div>
       );
     }
+    let color = '#000000';
+    let weight = 'normal';
+    let bg = 'unset';
+    let fontSize = '1rem';
+    if (this.props.value !== undefined) {
+      weight = '500';
+      if (this.props.user) {
+        color = '#000';
+        fontSize = '1.1rem';
+      } else {
+        bg = '#dcdcdc';
+      }
+    } else {
+      color = '#444';
+    }
+    if (this.props.valid === false) {
+      bg = '#ffcccc';
+    }
     return (
       <div style={{
           border: '1px solid black',
@@ -51,11 +76,13 @@ class Cell extends React.Component<CellProps> {
           boxSizing: 'border-box',
           width: '9vw',
           height: '9vw',
-          backgroundColor: this.props.valid === false ? '#ffcccc' : 'unset',
+          backgroundColor: bg,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          fontWeight: this.props.user ? 'normal' : 'bold',
+          color,
+          fontWeight: weight,
+          fontSize,
         }}>
         {interior}
       </div>

@@ -10,14 +10,25 @@ const getNewBoard = (d: 'easy' | 'medium' | 'hard' | 'expert') => {
   for (let i = 0; i < 81; i++) {
     const row = Math.floor(i / 9);
     const col = i % 9;
-    const value = parseInt(puzzle[i]);
+    let value: number|undefined = parseInt(puzzle[i]);
+    value = isNaN(value) ? undefined : value;
     if (!out[row]) {
       out[row] = [];
     }
     out[row][col] = {
-      value: isNaN(value) ? undefined : value,
-      user: isNaN(value),
+      value: value,
+      // user: !value,
+      user: Math.random() < 0.5
     };
+    if (!value) {
+      const candidates: number[] = [];
+      for (let n = 1; n <= 9; n++) {
+        if (Math.random() < 0.4) {
+          candidates.push(n);
+        }
+      }
+      out[row][col].candidates = candidates;
+    }
   }
   return out;
 };
@@ -28,18 +39,26 @@ function App() {
 
   return (
     <div>
-      <select value={difficulty} onChange={(e) => {
-        const newDifficulty = e.target.value as 'easy' | 'medium' | 'hard' | 'expert';
-        setDifficulty(newDifficulty);
-      }}>
-        <option value='easy'>Easy</option>
-        <option value='medium' selected>Medium</option>
-        <option value='hard'>Hard</option>
-        <option value='expert'>Expert</option>
-      </select>
-      <button onClick={() => {
-        setCells(getNewBoard(difficulty));
-      }}>New puzzle</button>
+      <div style={{
+          padding: '1rem 0 0 2rem',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '1rem',
+          alignItems: 'center',
+        }}>
+        <select value={difficulty} onChange={(e) => {
+          const newDifficulty = e.target.value as 'easy' | 'medium' | 'hard' | 'expert';
+          setDifficulty(newDifficulty);
+        }}>
+          <option value='easy'>Easy</option>
+          <option value='medium' selected>Medium</option>
+          <option value='hard'>Hard</option>
+          <option value='expert'>Expert</option>
+        </select>
+        <button onClick={() => {
+          setCells(getNewBoard(difficulty));
+        }}>New puzzle</button>
+      </div>
       <main style={{ padding: '1.5rem', fontFamily: 'system-ui, sans-serif' }}>
         <Board cells={cells} />
       </main>
