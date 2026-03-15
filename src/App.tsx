@@ -6,6 +6,7 @@ import { BoardExport } from './board_export';
 import { Controls } from './controls';
 import { Difficulty } from './types';
 import { userStorage } from './storage';
+import { InputPanel } from './input_panel';
 
 const getNewBoard = (d: Difficulty) => {
   const out: CellContents[][] = [];
@@ -43,6 +44,7 @@ function App() {
           gap: '1rem',
           alignItems: 'center',
         }}>
+        <InputPanel />
         <Controls onNewPuzzle={(difficulty) => {
           setCells(getNewBoard(difficulty))
         }} />
