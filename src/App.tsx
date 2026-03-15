@@ -3,8 +3,9 @@ import { getSudoku } from 'sudoku-gen';
 
 import { Board, BoardProps } from './board';
 import { BoardExport } from './board_export';
+import { Controls, Difficulty } from './controls';
 
-const getNewBoard = (d: 'easy' | 'medium' | 'hard' | 'expert') => {
+const getNewBoard = (d: Difficulty) => {
   const out: BoardProps['cells'] = [];
   const {puzzle, solution, difficulty} = getSudoku(d);
   for (let i = 0; i < 81; i++) {
@@ -34,8 +35,7 @@ const getNewBoard = (d: 'easy' | 'medium' | 'hard' | 'expert') => {
 };
 
 function App() {
-  const [difficulty, setDifficulty] = React.useState<'easy' | 'medium' | 'hard' | 'expert'>('medium');
-  const [cells, setCells] = React.useState<BoardProps['cells']>(() => getNewBoard(difficulty));
+  const [cells, setCells] = React.useState<BoardProps['cells']>(() => getNewBoard('medium'));
 
   return (
     <div>
@@ -46,22 +46,12 @@ function App() {
           gap: '1rem',
           alignItems: 'center',
         }}>
-        <select value={difficulty} onChange={(e) => {
-          const newDifficulty = e.target.value as 'easy' | 'medium' | 'hard' | 'expert';
-          setDifficulty(newDifficulty);
-        }}>
-          <option value='easy'>Easy</option>
-          <option value='medium' selected>Medium</option>
-          <option value='hard'>Hard</option>
-          <option value='expert'>Expert</option>
-        </select>
-        <button onClick={() => {
-          setCells(getNewBoard(difficulty));
-        }}>New puzzle</button>
+        
       </div>
-      <main style={{ padding: '1.5rem', fontFamily: 'system-ui, sans-serif' }}>
-        <Board cells={cells} />
-      </main>
+      <Board cells={cells} />
+      <Controls onNewPuzzle={(difficulty) => {
+        setCells(getNewBoard(difficulty))
+      }} />
       <BoardExport cells={cells} />
     </div>
   );
