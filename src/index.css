@@ -10,5 +10,5 @@ body {
 }
 
 #root {
-  min-height: 100vh;
+  max-height: 90vh;
 }

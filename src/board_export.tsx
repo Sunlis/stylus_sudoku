@@ -1,8 +1,12 @@
 import React from 'react';
 
-import { BoardProps } from './board';
+import { CellContents } from './board';
 
-export class BoardExport extends React.Component<BoardProps> {
+interface ExportProps {
+  cells: CellContents[][];
+}
+
+export class BoardExport extends React.Component<ExportProps> {
   render() {
     let boardString = '';
     for (let i = 0; i < 81; i++) {

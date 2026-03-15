@@ -24,9 +24,8 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
 
   render() {
     return (
-      <div>
+      <div style={{ width: '90vw', padding: '1rem 0 0 0' }}>
         <div style={{
-          padding: '1rem 0 0 2rem',
           display: 'flex',
           flexDirection: 'row',
           gap: '1rem',
@@ -36,7 +35,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             this.dialogRef.current?.showModal();
           }}>New puzzle</button>
         </div>
-        <dialog closedby="any" ref={this.dialogRef}>
+        <dialog ref={this.dialogRef}>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
