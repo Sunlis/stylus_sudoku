@@ -1,8 +1,9 @@
 import React from "react";
 import Tesseract from "tesseract.js";
 import { createWorker } from "tesseract.js";
+import { recognize, Trace, TraceBuilder } from "./handwriting";
 
-const PEN_SIZE = 1;
+const PEN_SIZE = 3;
 
 interface Props {}
 
@@ -14,6 +15,7 @@ interface State {
 export class InputPanel extends React.Component<Props, State> {
   canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
   tesseractWorker?: Tesseract.Worker;
+  trace: TraceBuilder = new TraceBuilder();
 
   constructor(props: Props) {
     super(props);
@@ -47,12 +49,14 @@ export class InputPanel extends React.Component<Props, State> {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const { x, y } = this.relativePosition(event);
+    const previous = this.state.previousMouse ?? {x, y};
     ctx.fillStyle = 'blue';
     ctx.strokeStyle = 'blue';
     ctx.lineWidth = PEN_SIZE;
-    ctx.moveTo(this.state.previousMouse?.x || x, this.state.previousMouse?.y || y);
+    ctx.moveTo(previous.x, previous.y);
     ctx.lineTo(x, y);
     ctx.stroke();
+    this.trace.addPoint(x, y);
     this.setState({ previousMouse: { x, y } });
   }
 
@@ -79,6 +83,7 @@ export class InputPanel extends React.Component<Props, State> {
             const canvas = this.canvasRef.current!;
             const ctx = canvas.getContext('2d')!;
             ctx.beginPath();
+            this.trace.beginStroke();
           }}
           onTouchEnd={() => {
             this.setState({ mouseDown: false, previousMouse: undefined });
@@ -86,14 +91,22 @@ export class InputPanel extends React.Component<Props, State> {
             const ctx = canvas.getContext('2d')!;
             ctx.closePath();
           }}
-          width='100'
-          height='100'></canvas>
+          width='250'
+          height='250'></canvas>
         <button onClick={async () => {
           const canvas = this.canvasRef.current!;
           const ctx = canvas.getContext('2d')!;
           const rec = await this.tesseractWorker!.recognize(canvas.toDataURL());
-          console.log(`Recognized text: "${rec.data.text.trim()}"`);
+          console.log(`Tesseract recognized text: "${rec.data.text.trim()}"`);
+
+          recognize(this.trace.getTrace(), { width: canvas.width, height: canvas.height }).then((results) => {
+            console.log(`Google Handwriting recognized text: "${results}"`);
+          }).catch((error) => {
+            console.error(`Google Handwriting recognition error: ${error}`);
+          });
+
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          this.trace.clear();
         }}>Read</button>
       </div>
     );
