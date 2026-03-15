@@ -1,8 +1,6 @@
 import React from 'react';
-import { BoardProps } from './board';
-import { getSudoku } from 'sudoku-gen';
-
-export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
+import { Difficulty } from './types';
+import { userStorage } from './storage';
 
 interface ControlsProps {
   onNewPuzzle: (difficulty: Difficulty) => void;
@@ -19,7 +17,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
   constructor(props: ControlsProps) {
     super(props);
     this.state = {
-      difficulty: 'medium',
+      difficulty: userStorage.getDifficulty(),
       showDialog: false,
     };
   }
@@ -35,7 +33,6 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
           alignItems: 'center',
         }}>
           <button onClick={() => {
-            // this.props.onNewPuzzle(this.state.difficulty);
             this.dialogRef.current?.showModal();
           }}>New puzzle</button>
         </div>
@@ -50,6 +47,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             <select value={this.state.difficulty} onChange={(e) => {
               const newDifficulty = e.target.value as Difficulty;
               this.setState({ difficulty: newDifficulty });
+              userStorage.setDifficulty(newDifficulty);
             }}>
               <option value='easy'>Easy</option>
               <option value='medium'>Medium</option>

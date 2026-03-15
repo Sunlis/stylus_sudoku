@@ -3,7 +3,9 @@ import { getSudoku } from 'sudoku-gen';
 
 import { Board, BoardProps } from './board';
 import { BoardExport } from './board_export';
-import { Controls, Difficulty } from './controls';
+import { Controls } from './controls';
+import { Difficulty } from './types';
+import { userStorage } from './storage';
 
 const getNewBoard = (d: Difficulty) => {
   const out: BoardProps['cells'] = [];
@@ -18,16 +20,10 @@ const getNewBoard = (d: Difficulty) => {
     }
     out[row][col] = {
       value: value,
-      // user: !value,
-      user: Math.random() < 0.5
+      user: !value,
     };
     if (!value) {
       const candidates: number[] = [];
-      for (let n = 1; n <= 9; n++) {
-        if (Math.random() < 0.4) {
-          candidates.push(n);
-        }
-      }
       out[row][col].candidates = candidates;
     }
   }
@@ -35,7 +31,9 @@ const getNewBoard = (d: Difficulty) => {
 };
 
 function App() {
-  const [cells, setCells] = React.useState<BoardProps['cells']>(() => getNewBoard('medium'));
+  const [cells, setCells] = React.useState<BoardProps['cells']>(() => {
+    return getNewBoard(userStorage.getDifficulty());
+  });
 
   return (
     <div>
