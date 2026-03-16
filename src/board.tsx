@@ -85,27 +85,27 @@ class Cell extends React.Component<CellProps> {
 
     return (
       <div style={{
-          border: '1px solid black',
-          borderLeftWidth: borderLeft,
-          borderTopWidth: borderTop,
-          borderRight: 'none',
-          borderBottom: 'none',
-          boxSizing: 'border-box',
-          width: '10vw',
-          height: '10vw',
-          backgroundColor: bg,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          color,
-          fontWeight: weight,
-          fontSize,
-        }}
-        onClick={() => {
-          if (this.props.user) {
-            this.props.onClick();
-          }
-        }}>
+            border: '1px solid black',
+            borderLeftWidth: borderLeft,
+            borderTopWidth: borderTop,
+            borderRight: 'none',
+            borderBottom: 'none',
+            boxSizing: 'border-box',
+            width: '10vw',
+            height: '10vw',
+            backgroundColor: bg,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color,
+            fontWeight: weight,
+            fontSize,
+          }}
+          onClick={() => {
+            if (this.props.user) {
+              this.props.onClick();
+            }
+          }}>
         {interior}
       </div>
     );
@@ -180,8 +180,9 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       column={colIndex}
                       row={rowIndex}
                       onClick={() => {
-                        this.setState({ focusedCell: { row: rowIndex, column: colIndex } });
-                        this.dialogRef.current?.showModal();
+                        console.log('cell click');
+                        // this.setState({ focusedCell: { row: rowIndex, column: colIndex } });
+                        // this.dialogRef.current?.showModal();
                       }}
                       {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
                   })

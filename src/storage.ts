@@ -2,10 +2,12 @@ import { Difficulty } from "./types";
 
 interface UserPreferences {
   difficulty: Difficulty;
+  recognitionDelay: number;
 }
 
 const defaultPreferences: UserPreferences = {
   difficulty: 'medium',
+  recognitionDelay: 1000,
 };
 
 class UserStorage {
@@ -41,6 +43,15 @@ class UserStorage {
 
   setDifficulty(difficulty: Difficulty) {
     this.preferences.difficulty = difficulty;
+    this.setPreferences();
+  }
+
+  getRecognitionDelay(): number {
+    return this.preferences.recognitionDelay;
+  }
+
+  setRecognitionDelay(delay: number) {
+    this.preferences.recognitionDelay = delay;
     this.setPreferences();
   }
 }
