@@ -6,17 +6,22 @@ type Options = {
   width?: number;
   height?: number;
   language?: string;
-  numOfWords?: number;
-  numOfReturn?: number;
 }
 const defaultOptions: Options = {
   language: "en_US",
-  numOfWords: 1,
-  numOfReturn: 3,
 };
 
-export const recognize = function (trace: Trace, options: Options): Promise<unknown> {
-  console.log('req strokes', trace);
+type RecognitionResult = [
+  string, // error code, empty if no error
+  [
+    number, // identifier
+    string[], // recognition results
+    unknown[], // ??
+    unknown, // options?
+  ][]
+];
+
+export const recognize = function (trace: Trace, options: Options): Promise<number|null> {
   options = { ...defaultOptions, ...options };
   var data = JSON.stringify({
     "requests": [{
@@ -24,28 +29,18 @@ export const recognize = function (trace: Trace, options: Options): Promise<unkn
       "language": options.language,
     }]
   });
-  return new Promise(function (resolve, reject) {
+  return (new Promise<string[]>(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.addEventListener("readystatechange", function () {
       if (this.readyState !== 4) return;
       if (this.status === 200) {
-        var response = JSON.parse(this.responseText);
-        var results: unknown[][];
-        if (response.length === 1) {
-          reject(new Error(response[0]));
-          return;
-        } else {
-          results = response[1][0][1];
+        try {
+          var response: RecognitionResult = JSON.parse(this.responseText) as RecognitionResult;
+          var results: string[] = response[1][0][1];
+          resolve(results);
+        } catch (error) {
+          reject(error);
         }
-        if (!!options.numOfWords) {
-          results = results.filter(function (result) {
-            return (result.length == options.numOfWords);
-          });
-        }
-        if (!!options.numOfReturn) {
-          results = results.slice(0, options.numOfReturn);
-        }
-        resolve(results);
       } else if (this.status === 403) {
         reject(new Error("access denied"));
       } else if (this.status === 503) {
@@ -55,6 +50,18 @@ export const recognize = function (trace: Trace, options: Options): Promise<unkn
     xhr.open("POST", "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8");
     xhr.setRequestHeader("content-type", "application/json");
     xhr.send(data);
+  })).then((results: string[]) => {
+    for (const result of results) {
+      const parsed = parseInt(result as string, 10);
+      if (isNaN(parsed)) {
+        continue;
+      }
+      const firstDigit = parseInt(result[0], 10);
+      if (!isNaN(firstDigit)) {
+        return firstDigit;
+      }
+    }
+    return null;
   });
 };
 

@@ -1,7 +1,6 @@
 import React from "react";
 import Tesseract from "tesseract.js";
-import { createWorker } from "tesseract.js";
-import { recognize, Trace, TraceBuilder } from "./handwriting";
+import { recognize, TraceBuilder } from "./handwriting";
 
 const PEN_SIZE = 3;
 
@@ -23,13 +22,6 @@ export class InputPanel extends React.Component<Props, State> {
       mouseDown: false,
       previousMouse: undefined,
     };
-    createWorker('eng').then((worker) => {
-      worker.setParameters({
-        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR,
-        tessedit_char_whitelist: '123456789',
-      });
-      this.tesseractWorker = worker;
-    });
   }
 
   componentDidMount(): void {
@@ -96,11 +88,8 @@ export class InputPanel extends React.Component<Props, State> {
         <button onClick={async () => {
           const canvas = this.canvasRef.current!;
           const ctx = canvas.getContext('2d')!;
-          const rec = await this.tesseractWorker!.recognize(canvas.toDataURL());
-          console.log(`Tesseract recognized text: "${rec.data.text.trim()}"`);
-
           recognize(this.trace.getTrace(), { width: canvas.width, height: canvas.height }).then((results) => {
-            console.log(`Google Handwriting recognized text: "${results}"`);
+            console.log(`Google Handwriting recognized text: "${results}"`, results);
           }).catch((error) => {
             console.error(`Google Handwriting recognition error: ${error}`);
           });
