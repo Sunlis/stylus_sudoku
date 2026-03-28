@@ -2,7 +2,7 @@
   "name": "stylus_sudoku",
   "version": "1.0.0",
   "description": "Sudoku built for e-ink devices using a stylus",
-  "homepage": "https://sunlis.github.io/sudoku",
+  "homepage": "https://sunlis.github.io/stylus_sudoku",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
