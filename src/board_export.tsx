@@ -1,4 +1,5 @@
 import React from 'react';
+import copyIcon from '../static/copy.svg';
 
 import { CellContents } from './board';
 
@@ -33,8 +34,8 @@ export class BoardExport extends React.Component<ExportProps> {
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-all',
           overflowWrap: 'break-word',
-          backgroundColor: '#020617',
-          color: '#e5e7eb',
+          backgroundColor: '#c0c6d4',
+          color: '#020617',
           borderRadius: '0.75rem',
           border: '1px solid rgba(148,163,184,0.6)',
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
@@ -56,7 +57,13 @@ export class BoardExport extends React.Component<ExportProps> {
           }}
           onClick={() => {
             navigator.clipboard.writeText(boardString);
-          }}>Copy</button>
+          }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+            <img src={copyIcon} alt="" style={{ width: '16px', height: '16px' }} />
+            <span>Copy</span>
+          </span>
+        </button>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import hiddenIcon from '../static/hidden.svg';
 import crosshairIcon from '../static/crosshair.svg';
 import paletteIcon from '../static/palette.svg';
 import trashIcon from '../static/trash.svg';
+import eraserIcon from '../static/eraser.svg';
 import { userStorage } from './storage';
 import { getLayerRowColors } from './colour';
 
@@ -55,7 +56,7 @@ const LAYER_BUTTON_COLOR_CLASS =
   `${LAYER_ICON_BUTTON_BASE} border-slate-600 bg-slate-50 text-slate-800 hover:bg-slate-100`;
 
 const LAYER_BUTTON_REMOVE_CLASS =
-  `${LAYER_ICON_BUTTON_BASE} border-rose-500 bg-rose-50 text-rose-700 hover:bg-rose-100`;
+  `${LAYER_ICON_BUTTON_BASE} ml-auto border-rose-500 bg-rose-50 text-rose-700 hover:bg-rose-100`;
 
 interface LayerCanvasProps {
   layer: NoteLayer;
@@ -339,13 +340,23 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
     const body = document.body;
     if (activeLayerId != null) {
       body.classList.add('notes-mode');
+      const activeLayer = layers.find((layer) => layer.id === activeLayerId);
+      if (activeLayer) {
+        const { backgroundRgb } = getLayerRowColors(
+          COLORS[activeLayer.colorIndex % COLORS.length],
+        );
+        const accent = `rgba(${backgroundRgb.r}, ${backgroundRgb.g}, ${backgroundRgb.b}, 0.6)`;
+        body.style.setProperty('--notes-accent-color', accent);
+      }
     } else {
       body.classList.remove('notes-mode');
+      body.style.removeProperty('--notes-accent-color');
     }
     return () => {
       body.classList.remove('notes-mode');
+      body.style.removeProperty('--notes-accent-color');
     };
-  }, [activeLayerId]);
+  }, [activeLayerId, layers]);
 
   const addLayer = () => {
     const id = nextIdRef.current++;
@@ -382,6 +393,14 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
     setLayers((prev) => prev.map((layer) =>
       layer.id === id
         ? { ...layer, colorIndex: (layer.colorIndex + 1) % COLORS.length }
+        : layer,
+    ));
+  };
+
+  const clearLayer = (id: number) => {
+    setLayers((prev) => prev.map((layer) =>
+      layer.id === id
+        ? { ...layer, strokes: [] }
         : layer,
     ));
   };
@@ -429,7 +448,7 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
         onBeginStroke={beginStroke}
         onContinueStroke={continueStroke}
       />
-      <div className="mt-2 flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-2 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-slate-800">Note layers</span>
           <Button
@@ -507,6 +526,20 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
               >
                 <img
                   src={paletteIcon}
+                  alt=""
+                  className="h-5 w-5"
+                />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                aria-label="Clear layer drawings"
+                className={LAYER_BUTTON_COLOR_CLASS}
+                onClick={() => clearLayer(layer.id)}
+              >
+                <img
+                  src={eraserIcon}
                   alt=""
                   className="h-5 w-5"
                 />

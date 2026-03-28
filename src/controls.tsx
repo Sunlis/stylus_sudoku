@@ -30,7 +30,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
 
   render() {
     return (
-      <div className="mt-2 w-full flex flex-col gap-2 rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="w-full flex flex-col gap-2 rounded-2xl bg-white/90 p-2 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-center justify-between gap-4">
           <Button
             onClick={() => {
