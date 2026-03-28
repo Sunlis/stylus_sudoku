@@ -55,12 +55,12 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               onClick={this.props.onUndo}
               isDisabled={!this.props.canUndo}
               variant="bordered"
-              className="rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-slate-100"
+              className="h-10 w-10 rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-slate-100"
             >
               <img
                 src={undoIcon}
                 alt=""
-                className="h-5 w-5"
+                className="h-6 w-6"
               />
             </Button>
             <Button
@@ -68,12 +68,12 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               aria-label={this.props.eraseMode ? 'Eraser mode' : 'Draw mode'}
               onClick={this.props.onToggleEraseMode}
               variant="bordered"
-              className="rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
+              className="h-10 w-10 rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
             >
               <img
                 src={this.props.eraseMode ? eraserIcon : pencilIcon}
                 alt=""
-                className="h-5 w-5"
+                className="h-6 w-6"
               />
             </Button>
           </div>
