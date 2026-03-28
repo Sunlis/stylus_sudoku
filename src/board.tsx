@@ -1,16 +1,17 @@
 import React from 'react';
+import { InputPanel } from './input_panel';
 
-class CandidateCell extends React.Component<{ number: number; visible: boolean }> {
+class CandidateCell extends React.Component<{ number: number; visible: boolean; }> {
   render() {
     return (
       <div style={{
-          textAlign: 'center',
-          width: '3vw',
-          height: '3vw',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
+        textAlign: 'center',
+        width: '3vw',
+        height: '3vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
         {this.props.visible ? this.props.number : ' '}
       </div>
     );
@@ -27,14 +28,20 @@ export interface CellContents {
 export interface CellProps extends CellContents {
   column: number;
   row: number;
-  onClick: () => void;
+  setNumber?: (num: number | null) => void;
 }
 
 class Cell extends React.Component<CellProps> {
   render() {
     let interior = <div></div>;
     if (this.props.value !== undefined) {
-      interior = <div>{this.props.value}</div>;
+      interior = <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>{this.props.value}</div>;
     } else if (this.props.candidates !== undefined) {
       interior = (
         <div style={{ display: 'flex', flexDirection: 'column', fontSize: '0.55em' }}>
@@ -55,6 +62,24 @@ class Cell extends React.Component<CellProps> {
           </div>
         </div>
       );
+    }
+    if (this.props.user) {
+      interior = <div style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+      }}>
+        <InputPanel anchor={{ x: 0, y: 0 }}
+          canvasSize={100}
+          onNumberRecognized={(num) => {
+            this.props.setNumber?.(num);
+          }}
+          onClearCell={() => {
+            this.props.setNumber?.(null);
+          }}
+        />
+        {interior}
+      </div>;
     }
     let color = '#000000';
     let weight = 'normal';
@@ -85,27 +110,22 @@ class Cell extends React.Component<CellProps> {
 
     return (
       <div style={{
-            border: '1px solid black',
-            borderLeftWidth: borderLeft,
-            borderTopWidth: borderTop,
-            borderRight: 'none',
-            borderBottom: 'none',
-            boxSizing: 'border-box',
-            width: '10vw',
-            height: '10vw',
-            backgroundColor: bg,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            color,
-            fontWeight: weight,
-            fontSize,
-          }}
-          onClick={() => {
-            if (this.props.user) {
-              this.props.onClick();
-            }
-          }}>
+        border: '1px solid black',
+        borderLeftWidth: borderLeft,
+        borderTopWidth: borderTop,
+        borderRight: 'none',
+        borderBottom: 'none',
+        boxSizing: 'border-box',
+        width: '10vw',
+        height: '10vw',
+        backgroundColor: bg,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color,
+        fontWeight: weight,
+        fontSize,
+      }}>
         {interior}
       </div>
     );
@@ -118,52 +138,17 @@ interface BoardProps {
 }
 
 interface BoardState {
-  focusedCell?: {
-    row: number;
-    column: number;
-  };
 }
 
 export class Board extends React.Component<BoardProps, BoardState> {
-  dialogRef: React.RefObject<HTMLDialogElement> = React.createRef();
-
-  constructor(props: BoardProps) {
-    super(props);
-    this.state = {
-      focusedCell: undefined,
-    };
-  }
 
   render() {
-    const inputButton = (num: number) => {
-      return (
-        <button
-          key={num}
-          style={{
-            width: '4rem',
-            height: '4rem',
-          }}
-          onClick={() => {
-            if (this.state.focusedCell) {
-              const { row, column } = this.state.focusedCell;
-              const newContents: CellContents = {
-                ...this.props.cells[row][column],
-                value: num,
-                user: true,
-              };
-              this.props.onChangeCell(row, column, newContents);
-            }
-            this.dialogRef.current?.close();
-          }}>
-          {num}
-        </button>
-      );
-    };
     return (
       <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center' }}>
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
         <div style={{
           border: '2px solid black',
           borderLeft: 'none',
@@ -179,69 +164,21 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       key={colIndex}
                       column={colIndex}
                       row={rowIndex}
-                      onClick={() => {
-                        console.log('cell click');
-                        // this.setState({ focusedCell: { row: rowIndex, column: colIndex } });
-                        // this.dialogRef.current?.showModal();
+                      setNumber={(num: number | null) => {
+                        this.props.onChangeCell(rowIndex, colIndex, {
+                          ...this.props.cells[rowIndex][colIndex],
+                          value: num ?? undefined,
+                          user: true,
+                        });
                       }}
                       {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
                   })
                 }
               </div>
-            );
+              );
             })
           }
         </div>
-        <dialog
-          style={{
-            // marginTop: '65vh',
-          }}
-          ref={this.dialogRef}>
-          <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              padding: '0.1rem',
-            }}>
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                alignItems: 'center',
-              }}>
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-                  {inputButton(1)}
-                  {inputButton(2)}
-                  {inputButton(3)}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-                  {inputButton(4)}
-                  {inputButton(5)}
-                  {inputButton(6)}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-                  {inputButton(7)}
-                  {inputButton(8)}
-                  {inputButton(9)}
-                </div>
-                <button style={{ width: '6rem', height: '2.5rem', marginTop: '2rem' }} onClick={() => {
-                  if (this.state.focusedCell) {
-                    const { row, column } = this.state.focusedCell;
-                    const newContents: CellContents = {
-                      ...this.props.cells[row][column],
-                      value: undefined,
-                    };
-                    this.props.onChangeCell(row, column, newContents);
-                  }
-                  this.dialogRef.current?.close();
-                }}>Clear</button>
-              </div>
-            <button style={{ marginTop: '2rem', width: '6rem', height: '2.5rem' }} onClick={() => {
-              this.dialogRef.current?.close();
-            }}>Close</button>
-          </div>
-        </dialog>
       </div>
     );
   }

@@ -4,14 +4,24 @@ import { userStorage } from "./storage";
 
 const PEN_SIZE = 3;
 
+enum InputState {
+  IDLE,
+  INPUT,
+  THINKING,
+}
+
 interface Props {
-  anchor?: { x: number; y: number};
-  size: number;
+  anchor?: { x: number; y: number; };
+  canvasSize: number;
+  onNumberRecognized?: (num: number) => void;
+  onClearCell?: () => void;
+  onStateChange?: (state: InputState) => void;
 }
 
 interface State {
   mouseDown: boolean;
-  previousMouse?: { x: number; y: number };
+  previousMouse?: { x: number; y: number; };
+  inputState: InputState;
 }
 
 export class InputPanel extends React.Component<Props, State> {
@@ -24,6 +34,7 @@ export class InputPanel extends React.Component<Props, State> {
     this.state = {
       mouseDown: false,
       previousMouse: undefined,
+      inputState: InputState.IDLE,
     };
   }
 
@@ -31,12 +42,18 @@ export class InputPanel extends React.Component<Props, State> {
     this.canvasRef.current?.addEventListener(
       'touchmove',
       this.touchMove.bind(this),
-      {passive: false});
+      { passive: false });
   }
   componentWillUnmount(): void {
     this.canvasRef.current?.removeEventListener(
       'touchmove',
       this.touchMove.bind(this));
+  }
+
+  private changeState(newState: InputState, extraState: Partial<State> = {}) {
+    this.setState({ inputState: newState, ...extraState } as State, () => {
+      this.props.onStateChange?.(newState);
+    });
   }
 
   private touchStart(event: TouchEvent) {
@@ -48,8 +65,27 @@ export class InputPanel extends React.Component<Props, State> {
     ctx.closePath();
     ctx.beginPath();
     const pos = this.relativePosition(event as TouchEvent);
-    this.setState({ mouseDown: true, previousMouse: { x: pos.x, y: pos.y } });
+    this.changeState(InputState.INPUT, {
+      previousMouse: { x: pos.x, y: pos.y },
+    });
     this.trace.beginStroke();
+  }
+
+  private touchEnd(event: TouchEvent) {
+    this.changeState(InputState.THINKING,
+      {
+        mouseDown: false,
+        previousMouse: undefined,
+      });
+    const canvas = this.canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.closePath();
+    if (this.timeout) {
+      window.clearTimeout(this.timeout);
+    }
+    this.timeout = window.setTimeout(() => {
+      this.recognize();
+    }, userStorage.getRecognitionDelay());
   }
 
   private touchMove(event: TouchEvent) {
@@ -63,7 +99,7 @@ export class InputPanel extends React.Component<Props, State> {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const { x, y } = this.relativePosition(event);
-    const previous = this.state.previousMouse ?? {x, y};
+    const previous = this.state.previousMouse ?? { x, y };
     ctx.strokeStyle = 'black';
     ctx.lineWidth = PEN_SIZE;
     ctx.moveTo(previous.x, previous.y);
@@ -78,10 +114,16 @@ export class InputPanel extends React.Component<Props, State> {
     const ctx = canvas.getContext('2d')!;
     recognize(this.trace.getTrace(), { width: canvas.width, height: canvas.height }).then((results) => {
       console.log(`Google Handwriting recognized text: "${results}"`, results);
+      if (results) {
+        this.props.onNumberRecognized?.(results);
+      } else {
+        this.props.onClearCell?.();
+      }
     }).catch((error) => {
       console.error(`Google Handwriting recognition error: ${error}`);
+    }).finally(() => {
+      this.changeState(InputState.IDLE);
     });
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.trace.clear();
   }
@@ -90,40 +132,42 @@ export class InputPanel extends React.Component<Props, State> {
     const canvas = this.canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     // Calculate normalized position based on rendered size (10vw) and actual canvas resolution (this.props.size)
-    const scaleX = this.props.size / rect.width;
-    const scaleY = this.props.size / rect.height;
+    const scaleX = this.props.canvasSize / rect.width;
+    const scaleY = this.props.canvasSize / rect.height;
     const x = (event.touches[0].clientX - rect.left) * scaleX;
     const y = (event.touches[0].clientY - rect.top) * scaleY;
     return { x, y };
   }
 
   render() {
+    let backgroundColor = 'transparent';
+    if (this.state.inputState === InputState.INPUT) {
+      backgroundColor = 'rgba(0, 0, 255, 0.1)';
+    } else if (this.state.inputState === InputState.THINKING) {
+      backgroundColor = 'rgba(255, 150, 0, 0.1)';
+    }
+
     return (
       <canvas
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
           margin: 0,
           padding: 0,
-          backgroundColor: 'rgba(0, 0, 255, 0.3)',
-          width: '20vw',
+          backgroundColor,
         }}
         ref={this.canvasRef}
         onTouchStart={(event) => {
           this.touchStart(event.nativeEvent);
         }}
-        onTouchEnd={() => {
-          this.setState({ mouseDown: false, previousMouse: undefined });
-          const canvas = this.canvasRef.current!;
-          const ctx = canvas.getContext('2d')!;
-          ctx.closePath();
-          if (this.timeout) {
-            window.clearTimeout(this.timeout);
-          }
-          this.timeout = window.setTimeout(() => {
-            this.recognize();
-          }, userStorage.getRecognitionDelay());
+        onTouchEnd={(event) => {
+          this.touchEnd(event.nativeEvent);
         }}
-        width={this.props.size}
-        height={this.props.size} />
+        width={this.props.canvasSize}
+        height={this.props.canvasSize} />
     );
   }
 }
