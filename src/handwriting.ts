@@ -27,13 +27,15 @@ export enum SpecialInput {
   UNKONWN,
 }
 
-export type Input = {
-  number: number;
-  special: never;
-} | {
-  number: never;
-  special: SpecialInput;
-};
+export type Input =
+  | {
+    number: number;
+    special?: undefined;
+  }
+  | {
+    number?: undefined;
+    special: SpecialInput;
+  };
 
 export const recognize = function (trace: Trace, options: Options): Promise<Input> {
   options = { ...defaultOptions, ...options };
@@ -45,6 +47,9 @@ export const recognize = function (trace: Trace, options: Options): Promise<Inpu
   });
   return (new Promise<string[]>(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
+    xhr.onerror = function () {
+      reject(new Error("network error"));
+    };
     xhr.addEventListener("readystatechange", function () {
       if (this.readyState !== 4) return;
       if (this.status === 200) {

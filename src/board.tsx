@@ -66,9 +66,11 @@ class Cell extends React.Component<CellProps> {
         width: '100%',
         height: '100%',
       }}>
-        <InputPanel anchor={{ x: 0, y: 0 }}
+        <InputPanel
+          anchor={{ x: 0, y: 0 }}
           canvasSize={100}
           eraseMode={this.props.eraseMode}
+          storageKey={`${this.props.row},${this.props.column}`}
           onNumberRecognized={(num) => {
             this.props.setNumber?.(num);
           }}

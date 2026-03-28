@@ -1,11 +1,13 @@
 import { Difficulty } from "./types";
 import type { CellContents } from "./board";
+import type { Trace } from "./handwriting";
 
 interface UserPreferences {
   difficulty: Difficulty;
   recognitionDelay: number;
   boardState?: CellContents[][];
   notesLayers?: unknown;
+  handwritingStrokes?: Record<string, Trace>;
 }
 
 const defaultPreferences: UserPreferences = {
@@ -73,6 +75,26 @@ class UserStorage {
 
   setNotesLayers(layers: unknown): void {
     this.preferences.notesLayers = layers;
+    this.setPreferences();
+  }
+
+  getHandwritingTrace(key: string): Trace | null {
+    const store = this.preferences.handwritingStrokes;
+    if (!store) {
+      return null;
+    }
+    return store[key] ?? null;
+  }
+
+  setHandwritingTrace(key: string, trace: Trace | null): void {
+    if (!this.preferences.handwritingStrokes) {
+      this.preferences.handwritingStrokes = {};
+    }
+    if (trace && trace.length > 0) {
+      this.preferences.handwritingStrokes[key] = trace;
+    } else {
+      delete this.preferences.handwritingStrokes[key];
+    }
     this.setPreferences();
   }
 }

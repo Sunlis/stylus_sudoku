@@ -17,6 +17,7 @@ interface Props {
   onClearCell?: () => void;
   onStateChange?: (state: InputState) => void;
   eraseMode?: boolean;
+  storageKey?: string;
 }
 
 interface State {
@@ -44,6 +45,31 @@ export class InputPanel extends React.Component<Props, State> {
       'touchmove',
       this.touchMove.bind(this),
       { passive: false });
+
+    const canvas = this.canvasRef.current;
+    if (canvas && this.props.storageKey) {
+      const saved = userStorage.getHandwritingTrace(this.props.storageKey);
+      if (saved && saved.length > 0) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.strokeStyle = 'black';
+          ctx.lineWidth = PEN_SIZE;
+          saved.forEach(([xs, ys]) => {
+            if (!xs.length) return;
+            ctx.beginPath();
+            ctx.moveTo(xs[0], ys[0]);
+            for (let i = 1; i < xs.length; i++) {
+              ctx.lineTo(xs[i], ys[i]);
+            }
+            ctx.stroke();
+          });
+          this.trace.strokes = saved.map(([xs, ys]) => [
+            [...xs],
+            [...ys],
+          ]);
+        }
+      }
+    }
   }
   componentWillUnmount(): void {
     this.canvasRef.current?.removeEventListener(
@@ -63,6 +89,17 @@ export class InputPanel extends React.Component<Props, State> {
     }
     if (this.props.eraseMode) {
       this.props.onClearCell?.();
+      if (this.props.storageKey) {
+        userStorage.setHandwritingTrace(this.props.storageKey, null);
+      }
+      const canvas = this.canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      this.trace.clear();
       return;
     }
     const canvas = this.canvasRef.current!;
@@ -89,6 +126,11 @@ export class InputPanel extends React.Component<Props, State> {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     ctx.closePath();
+    if (this.props.storageKey) {
+      // Persist the current trace immediately so it survives even if
+      // recognition never completes (e.g., fully offline status=0).
+      userStorage.setHandwritingTrace(this.props.storageKey, this.trace.getTrace());
+    }
     if (this.timeout) {
       window.clearTimeout(this.timeout);
     }
@@ -124,6 +166,7 @@ export class InputPanel extends React.Component<Props, State> {
   private recognize() {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
+    let hadError = false;
     recognize(
       this.trace.getTrace(),
       { width: canvas.width, height: canvas.height })
@@ -131,18 +174,33 @@ export class InputPanel extends React.Component<Props, State> {
         console.log(`Google Handwriting recognized text`, results);
         if (this.props.eraseMode) {
           this.props.onClearCell?.();
+          if (this.props.storageKey) {
+            userStorage.setHandwritingTrace(this.props.storageKey, null);
+          }
         } else if (results.number) {
           this.props.onNumberRecognized?.(results.number);
+          if (this.props.storageKey) {
+            userStorage.setHandwritingTrace(this.props.storageKey, null);
+          }
         } else if (results.special) {
           this.props.onClearCell?.();
+          if (this.props.storageKey) {
+            userStorage.setHandwritingTrace(this.props.storageKey, null);
+          }
         }
       }).catch((error) => {
         console.error(`Google Handwriting recognition error: ${error}`);
+        hadError = true;
+        if (this.props.storageKey) {
+          userStorage.setHandwritingTrace(this.props.storageKey, this.trace.getTrace());
+        }
       }).finally(() => {
         this.changeState(InputState.IDLE);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!hadError) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          this.trace.clear();
+        }
       });
-    this.trace.clear();
   }
 
   private relativePosition(event: TouchEvent) {
