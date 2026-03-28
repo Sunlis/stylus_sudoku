@@ -99,7 +99,7 @@ class Cell extends React.Component<CellProps> {
         color = '#000';
         fontSize = '1.1rem';
       } else {
-        bg = '#dcdcdc';
+        bg = 'rgba(0, 0, 0, 0.1)';
       }
     } else {
       color = '#444';
