@@ -144,7 +144,7 @@ export class Board extends React.Component<BoardProps, BoardState> {
 
   render() {
     return (
-      <div style={{
+      <div id="sudoku-board-root" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center'
