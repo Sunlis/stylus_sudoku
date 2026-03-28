@@ -29,3 +29,16 @@ body.notes-mode::before {
 #root {
   max-height: 90vh;
 }
+
+/* Disable text selection and long-press callouts over the Sudoku board area
+   so stylus input doesn't trigger selection/vibration. */
+#sudoku-board-root,
+#sudoku-board-root * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#sudoku-board-root {
+  touch-action: none;
+}

@@ -4,7 +4,7 @@ import { getSudoku } from 'sudoku-gen';
 import { Board, CellContents } from './board';
 import { BoardExport } from './board_export';
 import { Controls } from './controls';
-import { NotesLayers } from './notes_layers';
+import { NotesLayers, NoteLayer } from './notes_layers';
 import { Difficulty } from './types';
 import { userStorage } from './storage';
 
@@ -39,11 +39,44 @@ function App() {
     }
     return getNewBoard(userStorage.getDifficulty());
   });
+  const [layers, setLayers] = React.useState<NoteLayer[]>(() => {
+    const stored = userStorage.getNotesLayers<NoteLayer[]>();
+    if (stored && Array.isArray(stored)) {
+      return stored.map((layer) => ({ ...layer }));
+    }
+    return [
+      {
+        id: 1,
+        name: 'Candidates',
+        colorIndex: 0,
+        visible: true,
+        strokes: [],
+      },
+    ];
+  });
+
+  type HistoryEntry = { cells: CellContents[][]; layers: NoteLayer[]; };
+  const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
+
+  const pushHistory = React.useCallback((snapshotCells: CellContents[][], snapshotLayers: NoteLayer[]) => {
+    const MAX_HISTORY = 100;
+    setHistory((prev) => {
+      const updated = [...prev, { cells: snapshotCells, layers: snapshotLayers }];
+      if (updated.length > MAX_HISTORY) {
+        updated.shift();
+      }
+      return updated;
+    });
+  }, []);
 
   React.useEffect(() => {
     userStorage.setBoardState(cells);
   }, [cells]);
+
+  React.useEffect(() => {
+    userStorage.setNotesLayers(layers);
+  }, [layers]);
 
   React.useEffect(() => {
     document.title = 'Stylus Sudoku';
@@ -58,19 +91,51 @@ function App() {
               cells={cells}
               eraseMode={eraseMode}
               onChangeCell={(row, col, contents) => {
-                cells[row][col] = contents;
-                setCells([...cells]);
+                setCells((prevCells) => {
+                  pushHistory(prevCells, layers);
+                  const next = prevCells.map((rowArr, rIndex) => {
+                    if (rIndex !== row) return rowArr;
+                    return rowArr.map((cell, cIndex) => {
+                      if (cIndex !== col) return cell;
+                      return contents;
+                    });
+                  });
+                  return next;
+                });
               }}
             />
           </div>
           <Controls
             onNewPuzzle={(difficulty) => {
-              setCells(getNewBoard(difficulty));
+              setCells((prevCells) => {
+                pushHistory(prevCells, layers);
+                return getNewBoard(difficulty);
+              });
             }}
             eraseMode={eraseMode}
             onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+            onUndo={() => {
+              setHistory((prevHistory) => {
+                if (prevHistory.length === 0) {
+                  return prevHistory;
+                }
+                const nextHistory = [...prevHistory];
+                const previous = nextHistory.pop()!;
+                setCells(previous.cells);
+                setLayers(previous.layers);
+                return nextHistory;
+              });
+            }}
+            canUndo={history.length > 0}
           />
-          <NotesLayers eraseMode={eraseMode} />
+          <NotesLayers
+            eraseMode={eraseMode}
+            layers={layers}
+            setLayers={(updater) => setLayers((prev) => updater(prev))}
+            onStrokeWillBegin={() => {
+              pushHistory(cells, layers);
+            }}
+          />
           <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
             <BoardExport cells={cells} />
           </div>

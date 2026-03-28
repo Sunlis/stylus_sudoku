@@ -7,7 +7,6 @@ import crosshairIcon from '../static/crosshair.svg';
 import paletteIcon from '../static/palette.svg';
 import trashIcon from '../static/trash.svg';
 import eraserIcon from '../static/eraser.svg';
-import { userStorage } from './storage';
 import { getLayerRowColors } from './colour';
 
 const COLORS = ['#ff0000', '#008000', '#0000ff', '#ffa500'];
@@ -22,7 +21,7 @@ type Stroke = {
   erase?: boolean;
 };
 
-type NoteLayer = {
+export type NoteLayer = {
   id: number;
   name: string;
   colorIndex: number;
@@ -63,6 +62,7 @@ interface LayerCanvasProps {
   isActive: boolean;
   boardRect: DOMRect | null;
   eraseMode: boolean;
+  onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
 }
@@ -72,6 +72,7 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
   isActive,
   boardRect,
   eraseMode,
+  onStrokeWillBegin,
   onBeginStroke,
   onContinueStroke,
 }) => {
@@ -181,6 +182,7 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
     event.preventDefault();
     const erase = eraseMode || isErasePointer(event);
     const point = getRelativePoint(event);
+    onStrokeWillBegin();
     onBeginStroke(point, erase);
     setIsDrawing(true);
     setIsErasing(erase);
@@ -227,6 +229,9 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
         opacity: isActive ? 1 : 0.5,
         pointerEvents: isActive ? 'auto' : 'none',
       }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -239,6 +244,7 @@ interface NotesLayersOverlayProps {
   layers: NoteLayer[];
   activeLayerId: number | null;
   eraseMode: boolean;
+  onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
 }
@@ -247,6 +253,7 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
   layers,
   activeLayerId,
   eraseMode,
+  onStrokeWillBegin,
   onBeginStroke,
   onContinueStroke,
 }) => {
@@ -298,6 +305,7 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
             isActive={activeLayerId === layer.id}
             boardRect={boardRect}
             eraseMode={eraseMode}
+            onStrokeWillBegin={onStrokeWillBegin}
             onBeginStroke={onBeginStroke}
             onContinueStroke={onContinueStroke}
           />
@@ -309,32 +317,14 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
 
 interface NotesLayersProps {
   eraseMode: boolean;
+  layers: NoteLayer[];
+  setLayers: (updater: (prev: NoteLayer[]) => NoteLayer[]) => void;
+  onStrokeWillBegin: () => void;
 }
 
-export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
-  const [layers, setLayers] = React.useState<NoteLayer[]>(() => {
-    const stored = userStorage.getNotesLayers<NoteLayer[]>();
-    if (stored && Array.isArray(stored)) {
-      return stored.map((layer) => ({
-        ...layer,
-      }));
-    }
-    return [
-      {
-        id: 1,
-        name: 'Candidates',
-        colorIndex: 0,
-        visible: true,
-        strokes: [],
-      },
-    ];
-  });
+export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, setLayers, onStrokeWillBegin }) => {
   const [activeLayerId, setActiveLayerId] = React.useState<number | null>(null);
   const nextIdRef = React.useRef(2);
-
-  React.useEffect(() => {
-    userStorage.setNotesLayers(layers);
-  }, [layers]);
 
   React.useEffect(() => {
     const body = document.body;
@@ -445,6 +435,7 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
         layers={layers}
         activeLayerId={activeLayerId}
         eraseMode={eraseMode}
+        onStrokeWillBegin={onStrokeWillBegin}
         onBeginStroke={beginStroke}
         onContinueStroke={continueStroke}
       />

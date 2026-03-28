@@ -3,6 +3,7 @@ import { Button } from '@heroui/react';
 import pencilIcon from '../static/pencil.svg';
 import eraserIcon from '../static/eraser.svg';
 import gridIcon from '../static/grid.svg';
+import undoIcon from '../static/undo.svg';
 import { Difficulty } from './types';
 import { userStorage } from './storage';
 
@@ -10,6 +11,8 @@ interface ControlsProps {
   onNewPuzzle: (difficulty: Difficulty) => void;
   eraseMode: boolean;
   onToggleEraseMode: () => void;
+  onUndo: () => void;
+  canUndo: boolean;
 }
 
 interface ControlsState {
@@ -46,6 +49,20 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             </span>
           </Button>
           <div className="flex items-center gap-2">
+            <Button
+              isIconOnly
+              aria-label="Undo last move"
+              onClick={this.props.onUndo}
+              isDisabled={!this.props.canUndo}
+              variant="bordered"
+              className="rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-slate-100"
+            >
+              <img
+                src={undoIcon}
+                alt=""
+                className="h-5 w-5"
+              />
+            </Button>
             <Button
               isIconOnly
               aria-label={this.props.eraseMode ? 'Eraser mode' : 'Draw mode'}

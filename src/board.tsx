@@ -145,6 +145,9 @@ export class Board extends React.Component<BoardProps, BoardState> {
       <div
         id="sudoku-board-root"
         className="flex flex-col items-center"
+        onContextMenu={(event) => {
+          event.preventDefault();
+        }}
       >
         <div
           className="border-2 border-slate-900/90"

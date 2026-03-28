@@ -233,8 +233,14 @@ export class InputPanel extends React.Component<Props, State> {
           margin: 0,
           padding: 0,
           backgroundColor,
+          touchAction: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
         }}
         ref={this.canvasRef}
+        onContextMenu={(event) => {
+          event.preventDefault();
+        }}
         onTouchStart={(event) => {
           this.touchStart(event.nativeEvent);
         }}
