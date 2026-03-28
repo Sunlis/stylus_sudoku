@@ -33,8 +33,16 @@ const getNewBoard = (d: Difficulty) => {
 
 function App() {
   const [cells, setCells] = React.useState<CellContents[][]>(() => {
+    const stored = userStorage.getBoardState();
+    if (stored) {
+      return stored;
+    }
     return getNewBoard(userStorage.getDifficulty());
   });
+
+  React.useEffect(() => {
+    userStorage.setBoardState(cells);
+  }, [cells]);
 
   return (
     <div>

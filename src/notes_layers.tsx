@@ -1,4 +1,5 @@
 import React from 'react';
+import { userStorage } from './storage';
 
 const COLORS = ['#ff0000', '#008000', '#0000ff', '#ffa500'];
 
@@ -269,6 +270,10 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
 
 export const NotesLayers: React.FC = () => {
   const [layers, setLayers] = React.useState<NoteLayer[]>(() => {
+    const stored = userStorage.getNotesLayers<NoteLayer[]>();
+    if (stored && Array.isArray(stored)) {
+      return stored;
+    }
     return [
       {
         id: 1,
@@ -281,6 +286,10 @@ export const NotesLayers: React.FC = () => {
   });
   const [activeLayerId, setActiveLayerId] = React.useState<number | null>(null);
   const nextIdRef = React.useRef(2);
+
+  React.useEffect(() => {
+    userStorage.setNotesLayers(layers);
+  }, [layers]);
 
   React.useEffect(() => {
     const body = document.body;

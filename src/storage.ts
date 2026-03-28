@@ -1,8 +1,11 @@
 import { Difficulty } from "./types";
+import type { CellContents } from "./board";
 
 interface UserPreferences {
   difficulty: Difficulty;
   recognitionDelay: number;
+  boardState?: CellContents[][];
+  notesLayers?: unknown;
 }
 
 const defaultPreferences: UserPreferences = {
@@ -12,7 +15,7 @@ const defaultPreferences: UserPreferences = {
 
 class UserStorage {
   preferences: UserPreferences;
-  
+
   constructor() {
     this.preferences = this.getPreferences();
   }
@@ -52,6 +55,24 @@ class UserStorage {
 
   setRecognitionDelay(delay: number) {
     this.preferences.recognitionDelay = delay;
+    this.setPreferences();
+  }
+
+  getBoardState(): CellContents[][] | null {
+    return this.preferences.boardState ?? null;
+  }
+
+  setBoardState(cells: CellContents[][]): void {
+    this.preferences.boardState = cells;
+    this.setPreferences();
+  }
+
+  getNotesLayers<T = unknown>(): T | null {
+    return (this.preferences.notesLayers as T | undefined) ?? null;
+  }
+
+  setNotesLayers(layers: unknown): void {
+    this.preferences.notesLayers = layers;
     this.setPreferences();
   }
 }
