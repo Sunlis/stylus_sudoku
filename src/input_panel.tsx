@@ -113,6 +113,9 @@ export class InputPanel extends React.Component<Props, State> {
       previousMouse: { x: pos.x, y: pos.y },
     });
     this.trace.beginStroke();
+    // Record the initial contact point so we don't drop
+    // the first segment of each stroke in the trace.
+    this.trace.addPoint(pos.x, pos.y);
   }
 
   private touchEnd(event: TouchEvent) {
@@ -168,8 +171,25 @@ export class InputPanel extends React.Component<Props, State> {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     let hadError = false;
+
+    // Redraw from the normalized trace so the canvas reflects
+    // exactly what we're about to send to the recognition API.
+    const trace = this.trace.getTrace();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = PEN_SIZE;
+    trace.forEach(([xs, ys]) => {
+      if (!xs.length) return;
+      ctx.beginPath();
+      ctx.moveTo(xs[0], ys[0]);
+      for (let i = 1; i < xs.length; i++) {
+        ctx.lineTo(xs[i], ys[i]);
+      }
+      ctx.stroke();
+    });
+
     recognize(
-      this.trace.getTrace(),
+      trace,
       { width: canvas.width, height: canvas.height })
       .then((outcome: RecognitionOutcome) => {
         const { input, candidates } = outcome;
