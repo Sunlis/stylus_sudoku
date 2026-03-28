@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, recognize, SpecialInput, TraceBuilder } from "./handwriting";
+import { Input, recognize, RecognitionOutcome, SpecialInput, TraceBuilder } from "./handwriting";
 import { userStorage } from "./storage";
 
 const PEN_SIZE = 3;
@@ -16,6 +16,7 @@ interface Props {
   onNumberRecognized?: (num: number) => void;
   onClearCell?: () => void;
   onStateChange?: (state: InputState) => void;
+  onCandidatesRecognized?: (candidates: string[]) => void;
   eraseMode?: boolean;
   storageKey?: string;
 }
@@ -170,19 +171,25 @@ export class InputPanel extends React.Component<Props, State> {
     recognize(
       this.trace.getTrace(),
       { width: canvas.width, height: canvas.height })
-      .then((results: Input) => {
-        console.log(`Google Handwriting recognized text`, results);
+      .then((outcome: RecognitionOutcome) => {
+        const { input, candidates } = outcome;
+        console.log(`Google Handwriting recognized text`, input, candidates);
+
+        if (candidates && candidates.length > 0) {
+          this.props.onCandidatesRecognized?.(candidates);
+        }
+
         if (this.props.eraseMode) {
           this.props.onClearCell?.();
           if (this.props.storageKey) {
             userStorage.setHandwritingTrace(this.props.storageKey, null);
           }
-        } else if (results.number) {
-          this.props.onNumberRecognized?.(results.number);
+        } else if (input.number) {
+          this.props.onNumberRecognized?.(input.number);
           if (this.props.storageKey) {
             userStorage.setHandwritingTrace(this.props.storageKey, null);
           }
-        } else if (results.special) {
+        } else if (input.special !== undefined) {
           this.props.onClearCell?.();
           if (this.props.storageKey) {
             userStorage.setHandwritingTrace(this.props.storageKey, null);

@@ -58,6 +58,8 @@ function App() {
   type HistoryEntry = { cells: CellContents[][]; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
+  const [recognitionCandidates, setRecognitionCandidates] = React.useState<string[] | null>(null);
+  const recognitionToastTimeoutRef = React.useRef<number | null>(null);
 
   const pushHistory = React.useCallback((snapshotCells: CellContents[][], snapshotLayers: NoteLayer[]) => {
     const MAX_HISTORY = 100;
@@ -82,6 +84,76 @@ function App() {
     document.title = 'Stylus Sudoku';
   }, []);
 
+  const clearCandidatesRegion = (row: number, col: number) => {
+    const boardEl = document.getElementById('sudoku-board-root');
+    if (!boardEl) {
+      return;
+    }
+    const rect = boardEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+
+    const cellWidth = rect.width / 9;
+    const cellHeight = rect.height / 9;
+
+    const minX = col * cellWidth;
+    const maxX = (col + 1) * cellWidth;
+    const minY = row * cellHeight;
+    const maxY = (row + 1) * cellHeight;
+
+    setLayers((prevLayers) => prevLayers.map((layer) => {
+      if (layer.name !== 'Candidates') {
+        return layer;
+      }
+      const filteredStrokes = layer.strokes.filter((stroke) => {
+        return !stroke.points.some((point) => (
+          point.x >= minX && point.x <= maxX &&
+          point.y >= minY && point.y <= maxY
+        ));
+      });
+      if (filteredStrokes === layer.strokes) {
+        return layer;
+      }
+      return {
+        ...layer,
+        strokes: filteredStrokes,
+      };
+    }));
+  };
+
+  const handleChangeCell = (row: number, col: number, contents: CellContents) => {
+    // Capture a snapshot of the current board and layers for undo.
+    pushHistory(cells, layers);
+
+    setCells((prevCells) => {
+      return prevCells.map((rowArr, rIndex) => {
+        if (rIndex !== row) return rowArr;
+        return rowArr.map((cell, cIndex) => {
+          if (cIndex !== col) return cell;
+          return contents;
+        });
+      });
+    });
+
+    if (contents.user && contents.value !== undefined) {
+      clearCandidatesRegion(row, col);
+    }
+  };
+
+  const handleRecognitionCandidates = (row: number, col: number, candidates: string[]) => {
+    // Show a simple debug toast with the raw candidate strings.
+    setRecognitionCandidates(candidates);
+
+    if (recognitionToastTimeoutRef.current != null) {
+      window.clearTimeout(recognitionToastTimeoutRef.current);
+    }
+    recognitionToastTimeoutRef.current = window.setTimeout(() => {
+      setRecognitionCandidates(null);
+      recognitionToastTimeoutRef.current = null;
+    }, 4000);
+  };
+
   return (
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
       <div className="flex w-full max-w-3xl flex-col items-stretch gap-3">
@@ -90,19 +162,8 @@ function App() {
             <Board
               cells={cells}
               eraseMode={eraseMode}
-              onChangeCell={(row, col, contents) => {
-                setCells((prevCells) => {
-                  pushHistory(prevCells, layers);
-                  const next = prevCells.map((rowArr, rIndex) => {
-                    if (rIndex !== row) return rowArr;
-                    return rowArr.map((cell, cIndex) => {
-                      if (cIndex !== col) return cell;
-                      return contents;
-                    });
-                  });
-                  return next;
-                });
-              }}
+              onChangeCell={handleChangeCell}
+              onRecognitionCandidates={handleRecognitionCandidates}
             />
           </div>
           <Controls
@@ -141,6 +202,22 @@ function App() {
           </div>
         </main>
       </div>
+      {recognitionCandidates && recognitionCandidates.length > 0 && (
+        <div
+          className="fixed inset-x-0 bottom-4 flex justify-center px-4"
+          style={{ pointerEvents: 'none' }}
+        >
+          <div
+            className="max-w-sm rounded-xl bg-slate-900/95 px-3 py-2 text-xs text-slate-50 shadow-lg ring-1 ring-slate-700"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <div className="font-semibold mb-1">Recognition candidates</div>
+            <div className="break-words">
+              {recognitionCandidates.join(', ')}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

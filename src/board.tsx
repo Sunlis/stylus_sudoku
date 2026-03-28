@@ -26,6 +26,7 @@ export interface CellProps extends CellContents {
   row: number;
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
+  onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
 }
 
 class Cell extends React.Component<CellProps> {
@@ -76,6 +77,9 @@ class Cell extends React.Component<CellProps> {
           }}
           onClearCell={() => {
             this.props.setNumber?.(null);
+          }}
+          onCandidatesRecognized={(candidates) => {
+            this.props.onRecognitionCandidates?.(this.props.row, this.props.column, candidates);
           }}
         />
         {interior}
@@ -133,6 +137,7 @@ interface BoardProps {
   cells: CellContents[][];
   onChangeCell: (row: number, column: number, contents: CellContents) => void;
   eraseMode: boolean;
+  onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
 }
 
 interface BoardState {
@@ -167,6 +172,7 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       column={colIndex}
                       row={rowIndex}
                       eraseMode={this.props.eraseMode}
+                      onRecognitionCandidates={this.props.onRecognitionCandidates}
                       setNumber={(num: number | null) => {
                         this.props.onChangeCell(rowIndex, colIndex, {
                           ...this.props.cells[rowIndex][colIndex],
