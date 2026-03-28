@@ -1,5 +1,5 @@
 import React from "react";
-import { recognize, TraceBuilder } from "./handwriting";
+import { Input, recognize, SpecialInput, TraceBuilder } from "./handwriting";
 import { userStorage } from "./storage";
 
 const PEN_SIZE = 3;
@@ -66,6 +66,7 @@ export class InputPanel extends React.Component<Props, State> {
     ctx.beginPath();
     const pos = this.relativePosition(event as TouchEvent);
     this.changeState(InputState.INPUT, {
+      mouseDown: true,
       previousMouse: { x: pos.x, y: pos.y },
     });
     this.trace.beginStroke();
@@ -112,19 +113,22 @@ export class InputPanel extends React.Component<Props, State> {
   private recognize() {
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
-    recognize(this.trace.getTrace(), { width: canvas.width, height: canvas.height }).then((results) => {
-      console.log(`Google Handwriting recognized text: "${results}"`, results);
-      if (results) {
-        this.props.onNumberRecognized?.(results);
-      } else {
-        this.props.onClearCell?.();
-      }
-    }).catch((error) => {
-      console.error(`Google Handwriting recognition error: ${error}`);
-    }).finally(() => {
-      this.changeState(InputState.IDLE);
-    });
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    recognize(
+      this.trace.getTrace(),
+      { width: canvas.width, height: canvas.height })
+      .then((results: Input) => {
+        console.log(`Google Handwriting recognized text`, results);
+        if (results.number) {
+          this.props.onNumberRecognized?.(results.number);
+        } else if (results.special) {
+          this.props.onClearCell?.();
+        }
+      }).catch((error) => {
+        console.error(`Google Handwriting recognition error: ${error}`);
+      }).finally(() => {
+        this.changeState(InputState.IDLE);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
     this.trace.clear();
   }
 

@@ -6,7 +6,8 @@ type Options = {
   width?: number;
   height?: number;
   language?: string;
-}
+};
+
 const defaultOptions: Options = {
   language: "en_US",
 };
@@ -21,7 +22,20 @@ type RecognitionResult = [
   ][]
 ];
 
-export const recognize = function (trace: Trace, options: Options): Promise<number|null> {
+export enum SpecialInput {
+  CLEAR,
+  UNKONWN,
+}
+
+export type Input = {
+  number: number;
+  special: never;
+} | {
+  number: never;
+  special: SpecialInput;
+};
+
+export const recognize = function (trace: Trace, options: Options): Promise<Input> {
   options = { ...defaultOptions, ...options };
   var data = JSON.stringify({
     "requests": [{
@@ -50,18 +64,21 @@ export const recognize = function (trace: Trace, options: Options): Promise<numb
     xhr.open("POST", "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8");
     xhr.setRequestHeader("content-type", "application/json");
     xhr.send(data);
-  })).then((results: string[]) => {
+  })).then((results: string[]): Input => {
     for (const result of results) {
+      if ('/\\-Xx'.indexOf(result[0].charAt(0)) !== -1) {
+        return { special: SpecialInput.CLEAR };
+      }
       const parsed = parseInt(result as string, 10);
       if (isNaN(parsed)) {
         continue;
       }
       const firstDigit = parseInt(result[0], 10);
       if (!isNaN(firstDigit)) {
-        return firstDigit;
+        return { number: firstDigit };
       }
     }
-    return null;
+    return { special: SpecialInput.UNKONWN };
   });
 };
 
