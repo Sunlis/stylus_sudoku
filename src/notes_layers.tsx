@@ -1,5 +1,13 @@
 import React from 'react';
+import { Button } from '@heroui/react';
+import plusIcon from '../static/plus.svg';
+import visibleIcon from '../static/visible.svg';
+import hiddenIcon from '../static/hidden.svg';
+import crosshairIcon from '../static/crosshair.svg';
+import paletteIcon from '../static/palette.svg';
+import trashIcon from '../static/trash.svg';
 import { userStorage } from './storage';
+import { getLayerRowColors } from './colour';
 
 const COLORS = ['#ff0000', '#008000', '#0000ff', '#ffa500'];
 
@@ -23,6 +31,31 @@ type NoteLayer = {
 
 const STROKE_WIDTH = 2;
 const ERASER_WIDTH = 18;
+
+const LAYER_ROW_CLASS = 'flex items-center gap-2 rounded-xl px-3 py-2';
+
+const LAYER_BUTTON_BASE =
+  'rounded-lg border px-3 text-xs shadow-[0_2px_4px_rgba(15,23,42,0.85)]';
+
+const LAYER_BUTTON_NEUTRAL =
+  `${LAYER_BUTTON_BASE} border-slate-600 bg-slate-50 hover:bg-slate-100`;
+const LAYER_ICON_BUTTON_BASE =
+  'h-8 w-8 flex items-center justify-center rounded-full border shadow-[0_2px_4px_rgba(15,23,42,0.85)]';
+
+const LAYER_BUTTON_VISIBILITY_CLASS =
+  `${LAYER_ICON_BUTTON_BASE} border-slate-600 bg-slate-50 text-slate-700 hover:bg-slate-100`;
+
+const LAYER_BUTTON_ACTIVE_CLASS =
+  `${LAYER_ICON_BUTTON_BASE} border-slate-600 bg-slate-50 text-slate-800 hover:bg-slate-100`;
+
+const LAYER_BUTTON_ACTIVE_ON_CLASS =
+  `${LAYER_ICON_BUTTON_BASE} border-slate-900 bg-slate-900 text-white hover:bg-slate-900`;
+
+const LAYER_BUTTON_COLOR_CLASS =
+  `${LAYER_ICON_BUTTON_BASE} border-slate-600 bg-slate-50 text-slate-800 hover:bg-slate-100`;
+
+const LAYER_BUTTON_REMOVE_CLASS =
+  `${LAYER_ICON_BUTTON_BASE} border-rose-500 bg-rose-50 text-rose-700 hover:bg-rose-100`;
 
 interface LayerCanvasProps {
   layer: NoteLayer;
@@ -396,59 +429,106 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
         onBeginStroke={beginStroke}
         onContinueStroke={continueStroke}
       />
-      <div style={{
-        width: '90vw',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.5rem',
-        marginTop: '0.5rem',
-      }}>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <span>Notes layers</span>
-          <button onClick={addLayer}>Add layer</button>
-        </div>
-        {layers.map((layer) => (
-          <div
-            key={layer.id}
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
+      <div className="mt-2 flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-slate-800">Note layers</span>
+          <Button
+            size="sm"
+            color="primary"
+            className="rounded-lg border border-slate-900 bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-800"
+            onClick={addLayer}
           >
-            <span
+            <span className="flex items-center gap-1">
+              <img src={plusIcon} alt="" className="h-3.5 w-3.5" />
+              <span>Add layer</span>
+            </span>
+          </Button>
+        </div>
+        {layers.map((layer) => {
+          const { background, border, labelIsLight, backgroundRgb } = getLayerRowColors(
+            COLORS[layer.colorIndex % COLORS.length],
+          );
+
+          const isActiveRow = activeLayerId === layer.id;
+          const rowBackground = isActiveRow
+            ? background
+            : `rgba(${backgroundRgb.r}, ${backgroundRgb.g}, ${backgroundRgb.b}, 0.5)`;
+
+          return (
+            <div
+              key={layer.id}
               style={{
-                minWidth: '6rem',
+                backgroundColor: rowBackground,
+                border: `3px solid ${border}`,
               }}
-            >{layer.name}</span>
-            <button
-              onClick={() => toggleVisibility(layer.id)}
+              className={LAYER_ROW_CLASS}
             >
-              {layer.visible ? 'Hide' : 'Show'}
-            </button>
-            <button
-              onClick={() => toggleActive(layer.id)}
-            >
-              {activeLayerId === layer.id ? 'Deactivate' : 'Activate'}
-            </button>
-            <button
-              style={{
-                backgroundColor: COLORS[layer.colorIndex % COLORS.length],
-                color: '#ffffff',
-              }}
-              onClick={() => cycleColor(layer.id)}
-            >
-              Color
-            </button>
-            <button onClick={() => removeLayer(layer.id)}>Remove</button>
-          </div>
-        ))}
+              <span
+                className={`min-w-[6rem] text-sm font-medium ${labelIsLight ? 'text-slate-900' : 'text-white'}`}
+              >
+                {layer.name}
+              </span>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
+                className={LAYER_BUTTON_VISIBILITY_CLASS}
+                onClick={() => toggleVisibility(layer.id)}
+              >
+                <img
+                  src={layer.visible ? visibleIcon : hiddenIcon}
+                  alt=""
+                  className="h-5 w-5"
+                />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                aria-label={activeLayerId === layer.id ? 'Active layer' : 'Activate layer'}
+                className={isActiveRow ? LAYER_BUTTON_ACTIVE_ON_CLASS : LAYER_BUTTON_ACTIVE_CLASS}
+                onClick={() => toggleActive(layer.id)}
+              >
+                <img
+                  src={crosshairIcon}
+                  alt=""
+                  className="h-5 w-5"
+                  style={isActiveRow ? { filter: 'invert(1)' } : undefined}
+                />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                variant="bordered"
+                aria-label="Change layer color"
+                className={LAYER_BUTTON_COLOR_CLASS}
+                onClick={() => cycleColor(layer.id)}
+              >
+                <img
+                  src={paletteIcon}
+                  alt=""
+                  className="h-5 w-5"
+                />
+              </Button>
+              <Button
+                isIconOnly
+                size="sm"
+                color="danger"
+                variant="light"
+                aria-label="Remove layer"
+                className={LAYER_BUTTON_REMOVE_CLASS}
+                onClick={() => removeLayer(layer.id)}
+              >
+                <img
+                  src={trashIcon}
+                  alt=""
+                  className="h-5 w-5"
+                />
+              </Button>
+            </div>
+          );
+        })}
       </div>
     </>
   );

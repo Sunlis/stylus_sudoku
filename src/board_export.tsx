@@ -24,22 +24,35 @@ export class BoardExport extends React.Component<ExportProps> {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
+        width: '100%',
       }}>
         <pre style={{
-          flex: '0',
-          width: '70vw',
+          flex: '1 1 auto',
           margin: '0.5rem',
           padding: '0.5rem',
           whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word',
-          backgroundColor: '#d5d5d5',
+          wordBreak: 'break-all',
+          overflowWrap: 'break-word',
+          backgroundColor: '#020617',
+          color: '#e5e7eb',
+          borderRadius: '0.75rem',
+          border: '1px solid rgba(148,163,184,0.6)',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
         }}>
           {boardString}
         </pre>
         <button
           style={{
-            margin: '0 1rem',
-            flex: '1',
+            margin: '0 0.75rem 0 0.25rem',
+            flex: '0 0 auto',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '0.5rem',
+            border: '1px solid rgba(148,163,184,0.8)',
+            backgroundColor: '#0f172a',
+            color: '#f9fafb',
+            fontWeight: 500,
+            cursor: 'pointer',
+            boxShadow: '0 2px 4px rgba(15,23,42,0.85)',
           }}
           onClick={() => {
             navigator.clipboard.writeText(boardString);

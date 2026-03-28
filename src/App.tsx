@@ -45,31 +45,36 @@ function App() {
     userStorage.setBoardState(cells);
   }, [cells]);
 
+  React.useEffect(() => {
+    document.title = 'Stylus Sudoku';
+  }, []);
+
   return (
-    <div>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem',
-        alignItems: 'center',
-      }}>
-        <Controls
-          onNewPuzzle={(difficulty) => {
-            setCells(getNewBoard(difficulty));
-          }}
-          eraseMode={eraseMode}
-          onToggleEraseMode={() => setEraseMode((prev) => !prev)}
-        />
-        <Board
-          cells={cells}
-          eraseMode={eraseMode}
-          onChangeCell={(row, col, contents) => {
-            cells[row][col] = contents;
-            setCells([...cells]);
-          }}
-        />
-        <NotesLayers eraseMode={eraseMode} />
-        <BoardExport cells={cells} />
+    <div className="min-h-screen flex items-start justify-center py-6 px-4">
+      <div className="flex w-full max-w-3xl flex-col items-stretch gap-4">
+        <main className="mt-1 flex flex-col items-center gap-4">
+          <div className="rounded-2xl bg-white/90 p-3 shadow-md ring-1 ring-slate-200">
+            <Board
+              cells={cells}
+              eraseMode={eraseMode}
+              onChangeCell={(row, col, contents) => {
+                cells[row][col] = contents;
+                setCells([...cells]);
+              }}
+            />
+          </div>
+          <Controls
+            onNewPuzzle={(difficulty) => {
+              setCells(getNewBoard(difficulty));
+            }}
+            eraseMode={eraseMode}
+            onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+          />
+          <NotesLayers eraseMode={eraseMode} />
+          <div className="w-full rounded-xl bg-slate-950/90 p-3 text-xs text-slate-100 shadow-inner">
+            <BoardExport cells={cells} />
+          </div>
+        </main>
       </div>
     </div>
   );

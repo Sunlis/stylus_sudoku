@@ -4,14 +4,10 @@ import { InputPanel } from './input_panel';
 class CandidateCell extends React.Component<{ number: number; visible: boolean; }> {
   render() {
     return (
-      <div style={{
-        textAlign: 'center',
-        width: '3vw',
-        height: '3vw',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
+      <div
+        className="flex h-[3vw] w-[3vw] items-center justify-center text-[0.6rem] text-slate-500"
+        style={{ textAlign: 'center' }}
+      >
         {this.props.visible ? this.props.number : ' '}
       </div>
     );
@@ -111,23 +107,20 @@ class Cell extends React.Component<CellProps> {
     }
 
     return (
-      <div style={{
-        border: '1px solid black',
-        borderLeftWidth: borderLeft,
-        borderTopWidth: borderTop,
-        borderRight: 'none',
-        borderBottom: 'none',
-        boxSizing: 'border-box',
-        width: '10vw',
-        height: '10vw',
-        backgroundColor: bg,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color,
-        fontWeight: weight,
-        fontSize,
-      }}>
+      <div
+        className="flex h-[10vw] w-[10vw] items-center justify-center border border-slate-800/80 bg-white text-slate-900"
+        style={{
+          borderLeftWidth: borderLeft,
+          borderTopWidth: borderTop,
+          borderRight: 'none',
+          borderBottom: 'none',
+          boxSizing: 'border-box',
+          backgroundColor: bg,
+          color,
+          fontWeight: weight,
+          fontSize,
+        }}
+      >
         {interior}
       </div>
     );
@@ -147,20 +140,21 @@ export class Board extends React.Component<BoardProps, BoardState> {
 
   render() {
     return (
-      <div id="sudoku-board-root" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <div style={{
-          border: '2px solid black',
-          borderLeft: 'none',
-          borderTop: 'none',
-          boxSizing: 'border-box',
-        }}>
+      <div
+        id="sudoku-board-root"
+        className="flex flex-col items-center"
+      >
+        <div
+          className="border-2 border-slate-900/90"
+          style={{
+            borderLeft: 'none',
+            borderTop: 'none',
+            boxSizing: 'border-box',
+          }}
+        >
           {
             Array.from({ length: 9 }, (_, rowIndex) => {
-              return (<div key={rowIndex} style={{ display: 'flex', flexDirection: 'row' }}>
+              return (<div key={rowIndex} className="flex flex-row">
                 {
                   Array.from({ length: 9 }, (_, colIndex) => {
                     return <Cell
