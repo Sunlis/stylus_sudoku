@@ -4,6 +4,8 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // App will be served from https://sunlis.github.io/sudoku
+  base: '/sudoku/',
   plugins: [react(), basicSsl()],
   server: {
     host: true,
