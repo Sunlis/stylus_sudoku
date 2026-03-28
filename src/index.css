@@ -9,6 +9,10 @@ body {
   color: #111;
 }
 
+body.notes-mode {
+  background-color: #c8c8c8;
+}
+
 #root {
   max-height: 90vh;
 }

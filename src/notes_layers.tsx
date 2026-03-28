@@ -9,6 +9,7 @@ type Point = {
 
 type Stroke = {
   points: Point[];
+  erase?: boolean;
 };
 
 type NoteLayer = {
@@ -19,35 +20,36 @@ type NoteLayer = {
   strokes: Stroke[];
 };
 
-interface NotesLayersOverlayProps {
-  layers: NoteLayer[];
-  activeLayerId: number | null;
-  onBeginStroke: (point: Point) => void;
-  onContinueStroke: (point: Point) => void;
+const STROKE_WIDTH = 2;
+const ERASER_WIDTH = 18;
+
+interface LayerCanvasProps {
+  layer: NoteLayer;
+  isActive: boolean;
+  boardRect: DOMRect | null;
+  onBeginStroke: (point: Point, erase: boolean) => void;
+  onContinueStroke: (point: Point, erase: boolean) => void;
 }
 
-const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
-  layers,
-  activeLayerId,
+const LayerCanvas: React.FC<LayerCanvasProps> = ({
+  layer,
+  isActive,
+  boardRect,
   onBeginStroke,
   onContinueStroke,
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = React.useState(false);
-  const [lastPoint, setLastPoint] = React.useState<Point | null>(null);
-  const [boardRect, setBoardRect] = React.useState<DOMRect | null>(null);
+  const [isErasing, setIsErasing] = React.useState(false);
 
   const resizeCanvas = React.useCallback(() => {
     const canvas = canvasRef.current;
-    const boardEl = document.getElementById('sudoku-board-root');
-    if (!canvas || !boardEl) {
+    if (!canvas || !boardRect) {
       return;
     }
-    const rect = boardEl.getBoundingClientRect();
-    setBoardRect(rect);
     const dpr = window.devicePixelRatio || 1;
-    const width = rect.width;
-    const height = rect.height;
+    const width = boardRect.width;
+    const height = boardRect.height;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = width + 'px';
@@ -63,11 +65,11 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
       return;
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }, []);
+  }, [boardRect]);
 
   const redraw = React.useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
+    if (!canvas || !boardRect) {
       return;
     }
     let ctx: CanvasRenderingContext2D | null = null;
@@ -80,56 +82,51 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
     if (!ctx) {
       return;
     }
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const width = boardRect.width;
+    const height = boardRect.height;
     ctx.clearRect(0, 0, width, height);
 
-    layers.forEach((layer) => {
-      if (!layer.visible) {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    layer.strokes.forEach((stroke) => {
+      if (stroke.points.length === 0) {
         return;
       }
       ctx.save();
-      ctx.globalAlpha = activeLayerId === layer.id ? 1 : 0.5;
-      ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      layer.strokes.forEach((stroke) => {
-        if (stroke.points.length === 0) {
-          return;
-        }
-        ctx.beginPath();
-        ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-        for (let i = 1; i < stroke.points.length; i++) {
-          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-        }
-        ctx.stroke();
-      });
+      if (stroke.erase) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = ERASER_WIDTH;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
+        ctx.lineWidth = STROKE_WIDTH;
+      }
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i++) {
+        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      }
+      ctx.stroke();
       ctx.restore();
     });
-  }, [layers, activeLayerId]);
+  }, [boardRect, layer]);
 
   React.useEffect(() => {
     resizeCanvas();
     redraw();
   }, [resizeCanvas, redraw]);
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      resizeCanvas();
-      redraw();
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, { passive: true });
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
-    };
-  }, [resizeCanvas, redraw]);
-
-  React.useEffect(() => {
-    redraw();
-  }, [layers, redraw]);
+  const isErasePointer = (event: React.PointerEvent<HTMLCanvasElement>): boolean => {
+    if (event.pointerType !== 'pen') {
+      return false;
+    }
+    // For pen pointers, primary (tip) is button 0 (bit 0 in `buttons`).
+    // Treat any additional pressed button (side barrel, eraser end, etc.) as erase.
+    const nonPrimaryButtonsMask = event.buttons & ~1;
+    return nonPrimaryButtonsMask !== 0;
+  };
 
   const getRelativePoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current!;
@@ -141,24 +138,24 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!activeLayerId || !boardRect) {
+    if (!isActive || !boardRect) {
       return;
     }
     event.preventDefault();
+    const erase = isErasePointer(event);
     const point = getRelativePoint(event);
-    onBeginStroke(point);
+    onBeginStroke(point, erase);
     setIsDrawing(true);
-    setLastPoint(point);
+    setIsErasing(erase);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !activeLayerId || !boardRect) {
+    if (!isDrawing || !isActive || !boardRect) {
       return;
     }
     event.preventDefault();
     const point = getRelativePoint(event);
-    onContinueStroke(point);
-    setLastPoint(point);
+    onContinueStroke(point, isErasing);
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -167,7 +164,7 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
     }
     event.preventDefault();
     setIsDrawing(false);
-    setLastPoint(null);
+    setIsErasing(false);
   };
 
   const handlePointerLeave = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -176,8 +173,71 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
     }
     event.preventDefault();
     setIsDrawing(false);
-    setLastPoint(null);
+    setIsErasing(false);
   };
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'transparent',
+        touchAction: 'none',
+        opacity: isActive ? 1 : 0.5,
+        pointerEvents: isActive ? 'auto' : 'none',
+      }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+    />
+  );
+};
+
+interface NotesLayersOverlayProps {
+  layers: NoteLayer[];
+  activeLayerId: number | null;
+  onBeginStroke: (point: Point, erase: boolean) => void;
+  onContinueStroke: (point: Point, erase: boolean) => void;
+}
+
+const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
+  layers,
+  activeLayerId,
+  onBeginStroke,
+  onContinueStroke,
+}) => {
+  const [boardRect, setBoardRect] = React.useState<DOMRect | null>(null);
+
+  React.useEffect(() => {
+    const boardEl = document.getElementById('sudoku-board-root');
+    if (!boardEl) {
+      return;
+    }
+    const rect = boardEl.getBoundingClientRect();
+    setBoardRect(rect);
+  }, []);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const boardEl = document.getElementById('sudoku-board-root');
+      if (!boardEl) {
+        return;
+      }
+      const rect = boardEl.getBoundingClientRect();
+      setBoardRect(rect);
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   return (
     <div
@@ -191,19 +251,18 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
         zIndex: 1000,
       }}
     >
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'transparent',
-          touchAction: 'none',
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-      />
+      {layers.map((layer) => (
+        layer.visible ? (
+          <LayerCanvas
+            key={layer.id}
+            layer={layer}
+            isActive={activeLayerId === layer.id}
+            boardRect={boardRect}
+            onBeginStroke={onBeginStroke}
+            onContinueStroke={onContinueStroke}
+          />
+        ) : null
+      ))}
     </div>
   );
 };
@@ -222,6 +281,18 @@ export const NotesLayers: React.FC = () => {
   });
   const [activeLayerId, setActiveLayerId] = React.useState<number | null>(null);
   const nextIdRef = React.useRef(2);
+
+  React.useEffect(() => {
+    const body = document.body;
+    if (activeLayerId != null) {
+      body.classList.add('notes-mode');
+    } else {
+      body.classList.remove('notes-mode');
+    }
+    return () => {
+      body.classList.remove('notes-mode');
+    };
+  }, [activeLayerId]);
 
   const addLayer = () => {
     const id = nextIdRef.current++;
@@ -262,19 +333,19 @@ export const NotesLayers: React.FC = () => {
     ));
   };
 
-  const beginStroke = (point: Point) => {
+  const beginStroke = (point: Point, erase: boolean) => {
     setLayers((prev) => prev.map((layer) => {
       if (layer.id !== activeLayerId) {
         return layer;
       }
       return {
         ...layer,
-        strokes: [...layer.strokes, { points: [point] }],
+        strokes: [...layer.strokes, { points: [point], erase }],
       };
     }));
   };
 
-  const continueStroke = (point: Point) => {
+  const continueStroke = (point: Point, erase: boolean) => {
     setLayers((prev) => prev.map((layer) => {
       if (layer.id !== activeLayerId) {
         return layer;
@@ -285,6 +356,7 @@ export const NotesLayers: React.FC = () => {
       const strokes = layer.strokes.slice();
       const lastStroke = strokes[strokes.length - 1];
       const newStroke: Stroke = {
+        ...lastStroke,
         points: [...lastStroke.points, point],
       };
       strokes[strokes.length - 1] = newStroke;
