@@ -1,8 +1,8 @@
 {
   "name": "Stylus Sudoku",
   "short_name": "Sudoku",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/stylus_sudoku/",
+  "scope": "/stylus_sudoku/",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#020617",
