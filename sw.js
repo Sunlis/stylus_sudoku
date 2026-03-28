@@ -21,6 +21,7 @@ self.addEventListener('fetch', (event) => {
   // For navigations (address bar, home screen icon), serve the app shell
   // so we don't show the browser's offline error page.
   if (request.mode === 'navigate') {
+    const appShellUrl = self.registration.scope;
     event.respondWith(
       (async () => {
         try {
@@ -28,11 +29,11 @@ self.addEventListener('fetch', (event) => {
           const networkResponse = await fetch(request);
           const cache = await caches.open(CACHE_NAME);
           // Cache the root shell so future offline launches have something
-          cache.put('/', networkResponse.clone());
+          cache.put(appShellUrl, networkResponse.clone());
           return networkResponse;
         } catch (e) {
           // Offline or network error: fall back to cached shell if we have it
-          const cachedRoot = await caches.match('/');
+          const cachedRoot = await caches.match(appShellUrl);
           if (cachedRoot) {
             return cachedRoot;
           }
