@@ -29,6 +29,7 @@ export interface CellProps extends CellContents {
   column: number;
   row: number;
   setNumber?: (num: number | null) => void;
+  eraseMode?: boolean;
 }
 
 class Cell extends React.Component<CellProps> {
@@ -71,6 +72,7 @@ class Cell extends React.Component<CellProps> {
       }}>
         <InputPanel anchor={{ x: 0, y: 0 }}
           canvasSize={100}
+          eraseMode={this.props.eraseMode}
           onNumberRecognized={(num) => {
             this.props.setNumber?.(num);
           }}
@@ -135,6 +137,7 @@ class Cell extends React.Component<CellProps> {
 interface BoardProps {
   cells: CellContents[][];
   onChangeCell: (row: number, column: number, contents: CellContents) => void;
+  eraseMode: boolean;
 }
 
 interface BoardState {
@@ -164,6 +167,7 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       key={colIndex}
                       column={colIndex}
                       row={rowIndex}
+                      eraseMode={this.props.eraseMode}
                       setNumber={(num: number | null) => {
                         this.props.onChangeCell(rowIndex, colIndex, {
                           ...this.props.cells[rowIndex][colIndex],

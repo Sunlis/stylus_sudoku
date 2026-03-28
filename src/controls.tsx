@@ -4,6 +4,8 @@ import { userStorage } from './storage';
 
 interface ControlsProps {
   onNewPuzzle: (difficulty: Difficulty) => void;
+  eraseMode: boolean;
+  onToggleEraseMode: () => void;
 }
 
 interface ControlsState {
@@ -34,6 +36,10 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
           <button onClick={() => {
             this.dialogRef.current?.showModal();
           }}>New puzzle</button>
+          <span>Pen mode:</span>
+          <button onClick={this.props.onToggleEraseMode}>
+            {this.props.eraseMode ? 'Eraser' : 'Draw'}
+          </button>
         </div>
         <dialog ref={this.dialogRef}>
           <div style={{

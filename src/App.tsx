@@ -39,6 +39,7 @@ function App() {
     }
     return getNewBoard(userStorage.getDifficulty());
   });
+  const [eraseMode, setEraseMode] = React.useState(false);
 
   React.useEffect(() => {
     userStorage.setBoardState(cells);
@@ -52,17 +53,22 @@ function App() {
         gap: '1rem',
         alignItems: 'center',
       }}>
-        <Controls onNewPuzzle={(difficulty) => {
-          setCells(getNewBoard(difficulty));
-        }} />
+        <Controls
+          onNewPuzzle={(difficulty) => {
+            setCells(getNewBoard(difficulty));
+          }}
+          eraseMode={eraseMode}
+          onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+        />
         <Board
           cells={cells}
+          eraseMode={eraseMode}
           onChangeCell={(row, col, contents) => {
             cells[row][col] = contents;
             setCells([...cells]);
           }}
         />
-        <NotesLayers />
+        <NotesLayers eraseMode={eraseMode} />
         <BoardExport cells={cells} />
       </div>
     </div>

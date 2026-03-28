@@ -16,6 +16,7 @@ interface Props {
   onNumberRecognized?: (num: number) => void;
   onClearCell?: () => void;
   onStateChange?: (state: InputState) => void;
+  eraseMode?: boolean;
 }
 
 interface State {
@@ -60,6 +61,10 @@ export class InputPanel extends React.Component<Props, State> {
     if (this.timeout) {
       window.clearTimeout(this.timeout);
     }
+    if (this.props.eraseMode) {
+      this.props.onClearCell?.();
+      return;
+    }
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     ctx.closePath();
@@ -73,6 +78,9 @@ export class InputPanel extends React.Component<Props, State> {
   }
 
   private touchEnd(event: TouchEvent) {
+    if (this.props.eraseMode) {
+      return;
+    }
     this.changeState(InputState.THINKING,
       {
         mouseDown: false,
@@ -90,6 +98,9 @@ export class InputPanel extends React.Component<Props, State> {
   }
 
   private touchMove(event: TouchEvent) {
+    if (this.props.eraseMode) {
+      return;
+    }
     if (!this.state.mouseDown) {
       this.touchStart(event);
     }
@@ -118,7 +129,9 @@ export class InputPanel extends React.Component<Props, State> {
       { width: canvas.width, height: canvas.height })
       .then((results: Input) => {
         console.log(`Google Handwriting recognized text`, results);
-        if (results.number) {
+        if (this.props.eraseMode) {
+          this.props.onClearCell?.();
+        } else if (results.number) {
           this.props.onNumberRecognized?.(results.number);
         } else if (results.special) {
           this.props.onClearCell?.();

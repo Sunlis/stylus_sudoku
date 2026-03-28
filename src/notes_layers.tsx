@@ -18,7 +18,6 @@ type NoteLayer = {
   name: string;
   colorIndex: number;
   visible: boolean;
-  eraseMode: boolean;
   strokes: Stroke[];
 };
 
@@ -205,6 +204,7 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
 interface NotesLayersOverlayProps {
   layers: NoteLayer[];
   activeLayerId: number | null;
+  eraseMode: boolean;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
 }
@@ -212,6 +212,7 @@ interface NotesLayersOverlayProps {
 const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
   layers,
   activeLayerId,
+  eraseMode,
   onBeginStroke,
   onContinueStroke,
 }) => {
@@ -262,7 +263,7 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
             layer={layer}
             isActive={activeLayerId === layer.id}
             boardRect={boardRect}
-            eraseMode={layer.eraseMode}
+            eraseMode={eraseMode}
             onBeginStroke={onBeginStroke}
             onContinueStroke={onContinueStroke}
           />
@@ -272,12 +273,15 @@ const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
   );
 };
 
-export const NotesLayers: React.FC = () => {
+interface NotesLayersProps {
+  eraseMode: boolean;
+}
+
+export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode }) => {
   const [layers, setLayers] = React.useState<NoteLayer[]>(() => {
     const stored = userStorage.getNotesLayers<NoteLayer[]>();
     if (stored && Array.isArray(stored)) {
       return stored.map((layer) => ({
-        eraseMode: false,
         ...layer,
       }));
     }
@@ -287,7 +291,6 @@ export const NotesLayers: React.FC = () => {
         name: 'Candidates',
         colorIndex: 0,
         visible: true,
-        eraseMode: false,
         strokes: [],
       },
     ];
@@ -322,7 +325,6 @@ export const NotesLayers: React.FC = () => {
         name,
         colorIndex: nonDefaultIndex % COLORS.length,
         visible: true,
-        eraseMode: false,
         strokes: [],
       },
     ]);
@@ -347,14 +349,6 @@ export const NotesLayers: React.FC = () => {
     setLayers((prev) => prev.map((layer) =>
       layer.id === id
         ? { ...layer, colorIndex: (layer.colorIndex + 1) % COLORS.length }
-        : layer,
-    ));
-  };
-
-  const toggleEraseMode = (id: number) => {
-    setLayers((prev) => prev.map((layer) =>
-      layer.id === id
-        ? { ...layer, eraseMode: !layer.eraseMode }
         : layer,
     ));
   };
@@ -398,6 +392,7 @@ export const NotesLayers: React.FC = () => {
       <NotesLayersOverlay
         layers={layers}
         activeLayerId={activeLayerId}
+        eraseMode={eraseMode}
         onBeginStroke={beginStroke}
         onContinueStroke={continueStroke}
       />
@@ -441,11 +436,6 @@ export const NotesLayers: React.FC = () => {
               onClick={() => toggleActive(layer.id)}
             >
               {activeLayerId === layer.id ? 'Deactivate' : 'Activate'}
-            </button>
-            <button
-              onClick={() => toggleEraseMode(layer.id)}
-            >
-              {layer.eraseMode ? 'Eraser' : 'Draw'}
             </button>
             <button
               style={{

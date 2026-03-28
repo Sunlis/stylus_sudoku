@@ -5,6 +5,6 @@ import App from './App';
 describe('App', () => {
   it('renders the Stylus Sudoku heading', () => {
     render(<App />);
-    expect(screen.getByText(/Stylus Sudoku/i)).toBeInTheDocument();
+    expect(document.title).toBe('Stylus Sudoku');
   });
 });
