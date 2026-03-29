@@ -15,6 +15,7 @@ interface ControlsProps {
   onUndo: () => void;
   canUndo: boolean;
   onDrawCandidates: () => void;
+  onResetApp: () => void;
 }
 
 interface ControlsState {
@@ -185,6 +186,16 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               color="primary"
             >
               Draw Candidates
+            </Button>
+            <Button
+              className="rounded-lg border border-red-500 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 shadow-[0_2px_4px_rgba(127,29,29,0.5)] hover:bg-red-100"
+              variant="bordered"
+              onClick={() => {
+                this.overflowDialogRef.current?.close();
+                this.props.onResetApp();
+              }}
+            >
+              Clear saved data & refresh
             </Button>
             <Button
               className="mt-1 rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
