@@ -1,5 +1,8 @@
-import React from 'react';
-import { InputPanel } from './input_panel';
+import React from "react";
+
+import { InputPanel } from "@app/input_panel";
+import { CellContents } from "@app/types/board";
+
 
 class CandidateCell extends React.Component<{ number: number; visible: boolean; }> {
   render() {
@@ -14,13 +17,6 @@ class CandidateCell extends React.Component<{ number: number; visible: boolean; 
   }
 }
 
-export interface CellContents {
-  value?: number;
-  candidates?: number[];
-  valid?: boolean;
-  user?: boolean;
-}
-
 export interface CellProps extends CellContents {
   column: number;
   row: number;
@@ -29,7 +25,7 @@ export interface CellProps extends CellContents {
   onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
 }
 
-class Cell extends React.Component<CellProps> {
+export class Cell extends React.Component<CellProps> {
   render() {
     let interior = <div></div>;
     if (this.props.value !== undefined) {
@@ -137,66 +133,6 @@ class Cell extends React.Component<CellProps> {
         }}
       >
         {interior}
-      </div>
-    );
-  }
-}
-
-interface BoardProps {
-  cells: CellContents[][];
-  onChangeCell: (row: number, column: number, contents: CellContents) => void;
-  eraseMode: boolean;
-  onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
-}
-
-interface BoardState {
-}
-
-export class Board extends React.Component<BoardProps, BoardState> {
-
-  render() {
-    return (
-      <div
-        id="sudoku-board-root"
-        className="flex flex-col items-center"
-        onContextMenu={(event) => {
-          event.preventDefault();
-        }}
-      >
-        <div
-          className="border-2 border-slate-900/90"
-          style={{
-            borderLeft: 'none',
-            borderTop: 'none',
-            boxSizing: 'border-box',
-          }}
-        >
-          {
-            Array.from({ length: 9 }, (_, rowIndex) => {
-              return (<div key={rowIndex} className="flex flex-row">
-                {
-                  Array.from({ length: 9 }, (_, colIndex) => {
-                    return <Cell
-                      key={colIndex}
-                      column={colIndex}
-                      row={rowIndex}
-                      eraseMode={this.props.eraseMode}
-                      onRecognitionCandidates={this.props.onRecognitionCandidates}
-                      setNumber={(num: number | null) => {
-                        this.props.onChangeCell(rowIndex, colIndex, {
-                          ...this.props.cells[rowIndex][colIndex],
-                          value: num ?? undefined,
-                          user: true,
-                        });
-                      }}
-                      {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
-                  })
-                }
-              </div>
-              );
-            })
-          }
-        </div>
       </div>
     );
   }

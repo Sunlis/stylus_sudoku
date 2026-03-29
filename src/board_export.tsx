@@ -1,7 +1,7 @@
 import React from 'react';
 import copyIcon from '../static/copy.svg';
 
-import { CellContents } from './board';
+import { CellContents } from '@app/types/board';
 
 interface ExportProps {
   cells: CellContents[][];

@@ -1,5 +1,5 @@
 import { Difficulty } from "./types";
-import type { CellContents } from "./board";
+import type { CellContents } from "@app/types/board";
 import type { Trace } from "./handwriting";
 
 interface UserPreferences {

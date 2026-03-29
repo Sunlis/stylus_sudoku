@@ -1,4 +1,4 @@
-import { CellContents } from "./board";
+import { CellContents } from "@app/types/board";
 
 export function isBoardValid(board: CellContents[][]): boolean {
   // Check rows and columns
