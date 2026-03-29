@@ -193,7 +193,7 @@ export class InputPanel extends React.Component<Props, State> {
       { width: canvas.width, height: canvas.height })
       .then((outcome: RecognitionOutcome) => {
         const { input, candidates } = outcome;
-        console.log(`Google Handwriting recognized text`, input, candidates);
+        console.log(`Handwriting recognized text`, input, candidates);
 
         if (candidates && candidates.length > 0) {
           this.props.onCandidatesRecognized?.(candidates);

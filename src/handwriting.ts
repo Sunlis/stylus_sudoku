@@ -41,58 +41,78 @@ export type RecognitionOutcome = {
   input: Input;
   candidates: string[];
 };
+import { recognizeLocal } from './local_recognizer';
 
-export const recognize = function (trace: Trace, options: Options): Promise<RecognitionOutcome> {
+function buildOutcomeFromCandidates(results: string[]): RecognitionOutcome {
+  let input: Input = { special: SpecialInput.UNKONWN };
+  for (const result of results) {
+    if (result && '/\\-Xx'.indexOf(result[0].charAt(0)) !== -1) {
+      input = { special: SpecialInput.CLEAR };
+      break;
+    }
+    const parsed = parseInt(result as string, 10);
+    if (isNaN(parsed)) {
+      continue;
+    }
+    const firstDigit = parseInt(result[0], 10);
+    if (!isNaN(firstDigit)) {
+      input = { number: firstDigit };
+      break;
+    }
+  }
+  return { input, candidates: results };
+}
+
+function recognizeWithGoogle(trace: Trace, options: Options): Promise<RecognitionOutcome> {
   options = { ...defaultOptions, ...options };
-  var data = JSON.stringify({
-    "requests": [{
-      "ink": trace,
-      "language": options.language,
-    }]
+  const data = JSON.stringify({
+    requests: [{
+      ink: trace,
+      language: options.language,
+    }],
   });
-  return (new Promise<string[]>(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
+
+  return new Promise<string[]>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
     xhr.onerror = function () {
-      reject(new Error("network error"));
+      reject(new Error('network error'));
     };
-    xhr.addEventListener("readystatechange", function () {
+    xhr.addEventListener('readystatechange', function () {
       if (this.readyState !== 4) return;
       if (this.status === 200) {
         try {
-          var response: RecognitionResult = JSON.parse(this.responseText) as RecognitionResult;
-          var results: string[] = response[1][0][1];
+          const response: RecognitionResult = JSON.parse(this.responseText) as RecognitionResult;
+          const results: string[] = response[1][0][1];
           resolve(results);
         } catch (error) {
           reject(error);
         }
       } else if (this.status === 403) {
-        reject(new Error("access denied"));
+        reject(new Error('access denied'));
       } else if (this.status === 503) {
         reject(new Error("can't connect to recognition server"));
+      } else {
+        reject(new Error(`HTTP ${this.status}`));
       }
     });
-    xhr.open("POST", "https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8");
-    xhr.setRequestHeader("content-type", "application/json");
+    xhr.open('POST', 'https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8');
+    xhr.setRequestHeader('content-type', 'application/json');
     xhr.send(data);
-  })).then((results: string[]): RecognitionOutcome => {
-    let input: Input = { special: SpecialInput.UNKONWN };
-    for (const result of results) {
-      if ('/\\-Xx'.indexOf(result[0].charAt(0)) !== -1) {
-        input = { special: SpecialInput.CLEAR };
-        break;
+  }).then((results: string[]) => buildOutcomeFromCandidates(results));
+}
+
+export const recognize = function (trace: Trace, options: Options): Promise<RecognitionOutcome> {
+  // First, try local recognition (if a model is available). If that fails
+  // or yields no candidates, fall back to the existing Google API.
+  return recognizeLocal(trace)
+    .then((localResult) => {
+      if (localResult && localResult.candidates.length > 0) {
+        console.log('local result', localResult.candidates);
+        return buildOutcomeFromCandidates(localResult.candidates);
       }
-      const parsed = parseInt(result as string, 10);
-      if (isNaN(parsed)) {
-        continue;
-      }
-      const firstDigit = parseInt(result[0], 10);
-      if (!isNaN(firstDigit)) {
-        input = { number: firstDigit };
-        break;
-      }
-    }
-    return { input, candidates: results };
-  });
+      return recognizeWithGoogle(trace, options);
+    })
+    .catch(() => recognizeWithGoogle(trace, options));
 };
 
 export class TraceBuilder {
