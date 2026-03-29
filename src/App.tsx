@@ -1,14 +1,15 @@
 import React from 'react';
 import { getSudoku } from 'sudoku-gen';
 
-import { Board } from './board/board';
-import { BoardExport } from './board_export';
-import { Controls } from './controls';
-import { NotesLayers, NoteLayer } from './notes_layers';
-import { Difficulty } from './types';
-import { userStorage } from './storage';
-import { isRowValid, isColumnValid, isBoxValid } from './sudoku';
-import { CellContents } from './types/board';
+import { Board } from '@app/board/board';
+import { BoardExport } from '@app/board_export';
+import { Controls } from '@app/controls';
+import { NotesLayers } from '@app/notes/NotesLayers';
+import { Difficulty } from '@app/types';
+import { userStorage } from '@app/storage';
+import { isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
+import { CellContents } from '@app/types/board';
+import { NoteLayer } from '@app/types/notes';
 
 const getNewBoard = (d: Difficulty) => {
   const out: CellContents[][] = [];
