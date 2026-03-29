@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@app': path.resolve(__dirname, 'src'),
+      '@static': path.resolve(__dirname, 'static'),
     },
   },
   server: {

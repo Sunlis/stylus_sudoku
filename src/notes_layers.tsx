@@ -1,15 +1,22 @@
 import React from 'react';
 import { Button } from '@heroui/react';
-import plusIcon from '../static/plus.svg';
-import visibleIcon from '../static/visible.svg';
-import hiddenIcon from '../static/hidden.svg';
-import crosshairIcon from '../static/crosshair.svg';
-import paletteIcon from '../static/palette.svg';
-import trashIcon from '../static/trash.svg';
-import eraserIcon from '../static/eraser.svg';
+
+import plusIcon from '@static/plus.svg';
+import visibleIcon from '@static/visible.svg';
+import hiddenIcon from '@static/hidden.svg';
+import crosshairIcon from '@static/crosshair.svg';
+import paletteIcon from '@static/palette.svg';
+import trashIcon from '@static/trash.svg';
+import eraserIcon from '@static/eraser.svg';
+
 import { getLayerRowColors } from './colour';
 
-const COLORS = ['#ff0000', '#008000', '#0000ff', '#ffa500'];
+const COLORS = [
+  '#ff0000',
+  '#008000',
+  '#0000ff',
+  '#ffa500',
+];
 
 type Point = {
   x: number;
@@ -34,11 +41,6 @@ const ERASER_WIDTH = 18;
 
 const LAYER_ROW_CLASS = 'flex items-center gap-2 rounded-xl px-3 py-2';
 
-const LAYER_BUTTON_BASE =
-  'rounded-lg border px-3 text-xs shadow-[0_2px_4px_rgba(15,23,42,0.85)]';
-
-const LAYER_BUTTON_NEUTRAL =
-  `${LAYER_BUTTON_BASE} border-slate-600 bg-slate-50 hover:bg-slate-100`;
 const LAYER_ICON_BUTTON_BASE =
   'h-8 w-8 flex items-center justify-center rounded-full border shadow-[0_2px_4px_rgba(15,23,42,0.85)]';
 
@@ -67,21 +69,34 @@ interface LayerCanvasProps {
   onContinueStroke: (point: Point, erase: boolean) => void;
 }
 
-const LayerCanvas: React.FC<LayerCanvasProps> = ({
-  layer,
-  isActive,
-  boardRect,
-  eraseMode,
-  onStrokeWillBegin,
-  onBeginStroke,
-  onContinueStroke,
-}) => {
-  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = React.useState(false);
-  const [isErasing, setIsErasing] = React.useState(false);
+interface LayerCanvasState {
+  isDrawing: boolean;
+  isErasing: boolean;
+}
 
-  const resizeCanvas = React.useCallback(() => {
-    const canvas = canvasRef.current;
+class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasState> {
+  canvasRef = React.createRef<HTMLCanvasElement>();
+
+  state: LayerCanvasState = {
+    isDrawing: false,
+    isErasing: false,
+  };
+
+  componentDidMount(): void {
+    this.resizeCanvas();
+    this.redraw();
+  }
+
+  componentDidUpdate(prevProps: LayerCanvasProps): void {
+    if (prevProps.boardRect !== this.props.boardRect || prevProps.layer !== this.props.layer) {
+      this.resizeCanvas();
+      this.redraw();
+    }
+  }
+
+  resizeCanvas = (): void => {
+    const canvas = this.canvasRef.current;
+    const { boardRect } = this.props;
     if (!canvas || !boardRect) {
       return;
     }
@@ -103,10 +118,11 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
       return;
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }, [boardRect]);
+  };
 
-  const redraw = React.useCallback(() => {
-    const canvas = canvasRef.current;
+  redraw = (): void => {
+    const canvas = this.canvasRef.current;
+    const { boardRect, layer } = this.props;
     if (!canvas || !boardRect) {
       return;
     }
@@ -149,14 +165,9 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
       ctx.stroke();
       ctx.restore();
     });
-  }, [boardRect, layer]);
+  };
 
-  React.useEffect(() => {
-    resizeCanvas();
-    redraw();
-  }, [resizeCanvas, redraw]);
-
-  const isErasePointer = (event: React.PointerEvent<HTMLCanvasElement>): boolean => {
+  isErasePointer = (event: React.PointerEvent<HTMLCanvasElement>): boolean => {
     if (event.pointerType !== 'pen') {
       return false;
     }
@@ -166,8 +177,8 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
     return nonPrimaryButtonsMask !== 0;
   };
 
-  const getRelativePoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
-    const canvas = canvasRef.current!;
+  getRelativePoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
+    const canvas = this.canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
     return {
       x: event.clientX - rect.left,
@@ -175,70 +186,76 @@ const LayerCanvas: React.FC<LayerCanvasProps> = ({
     };
   };
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const { isActive, boardRect, eraseMode, onStrokeWillBegin, onBeginStroke } = this.props;
     if (!isActive || !boardRect) {
       return;
     }
     event.preventDefault();
-    const erase = eraseMode || isErasePointer(event);
-    const point = getRelativePoint(event);
+    const erase = eraseMode || this.isErasePointer(event);
+    const point = this.getRelativePoint(event);
     onStrokeWillBegin();
     onBeginStroke(point, erase);
-    setIsDrawing(true);
-    setIsErasing(erase);
+    this.setState({ isDrawing: true, isErasing: erase });
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const { isActive, boardRect, onContinueStroke } = this.props;
+    const { isDrawing, isErasing } = this.state;
     if (!isDrawing || !isActive || !boardRect) {
       return;
     }
     event.preventDefault();
-    const point = getRelativePoint(event);
+    const point = this.getRelativePoint(event);
     onContinueStroke(point, isErasing);
   };
 
-  const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const { isDrawing } = this.state;
     if (!isDrawing) {
       return;
     }
     event.preventDefault();
-    setIsDrawing(false);
-    setIsErasing(false);
+    this.setState({ isDrawing: false, isErasing: false });
   };
 
-  const handlePointerLeave = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  handlePointerLeave = (event: React.PointerEvent<HTMLCanvasElement>): void => {
+    const { isDrawing } = this.state;
     if (!isDrawing) {
       return;
     }
     event.preventDefault();
-    setIsDrawing(false);
-    setIsErasing(false);
+    this.setState({ isDrawing: false, isErasing: false });
   };
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'transparent',
-        touchAction: 'none',
-        opacity: isActive ? 1 : 0.5,
-        pointerEvents: isActive ? 'auto' : 'none',
-      }}
-      onContextMenu={(event) => {
-        event.preventDefault();
-      }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerLeave}
-    />
-  );
-};
+  render(): JSX.Element {
+    const { isActive } = this.props;
+
+    return (
+      <canvas
+        ref={this.canvasRef}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'transparent',
+          touchAction: 'none',
+          opacity: isActive ? 1 : 0.5,
+          pointerEvents: isActive ? 'auto' : 'none',
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+        }}
+        onPointerDown={this.handlePointerDown}
+        onPointerMove={this.handlePointerMove}
+        onPointerUp={this.handlePointerUp}
+        onPointerLeave={this.handlePointerLeave}
+      />
+    );
+  }
+}
 
 interface NotesLayersOverlayProps {
   layers: NoteLayer[];
@@ -249,71 +266,75 @@ interface NotesLayersOverlayProps {
   onContinueStroke: (point: Point, erase: boolean) => void;
 }
 
-const NotesLayersOverlay: React.FC<NotesLayersOverlayProps> = ({
-  layers,
-  activeLayerId,
-  eraseMode,
-  onStrokeWillBegin,
-  onBeginStroke,
-  onContinueStroke,
-}) => {
-  const [boardRect, setBoardRect] = React.useState<DOMRect | null>(null);
+interface NotesLayersOverlayState {
+  boardRect: DOMRect | null;
+}
 
-  React.useEffect(() => {
+class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps, NotesLayersOverlayState> {
+  state: NotesLayersOverlayState = {
+    boardRect: null,
+  };
+
+  componentDidMount(): void {
     const boardEl = document.getElementById('sudoku-board-root');
     if (!boardEl) {
       return;
     }
     const rect = boardEl.getBoundingClientRect();
-    setBoardRect(rect);
-  }, []);
+    this.setState({ boardRect: rect });
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      const boardEl = document.getElementById('sudoku-board-root');
-      if (!boardEl) {
-        return;
-      }
-      const rect = boardEl.getBoundingClientRect();
-      setBoardRect(rect);
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize, { passive: true });
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
-    };
-  }, []);
+    window.addEventListener('resize', this.handleResize);
+    window.addEventListener('scroll', this.handleResize, { passive: true });
+  }
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        left: boardRect?.left ?? 0,
-        top: boardRect?.top ?? 0,
-        width: boardRect?.width ?? 0,
-        height: boardRect?.height ?? 0,
-        pointerEvents: activeLayerId && boardRect ? 'auto' : 'none',
-        zIndex: 1000,
-      }}
-    >
-      {layers.map((layer) => (
-        layer.visible ? (
-          <LayerCanvas
-            key={layer.id}
-            layer={layer}
-            isActive={activeLayerId === layer.id}
-            boardRect={boardRect}
-            eraseMode={eraseMode}
-            onStrokeWillBegin={onStrokeWillBegin}
-            onBeginStroke={onBeginStroke}
-            onContinueStroke={onContinueStroke}
-          />
-        ) : null
-      ))}
-    </div>
-  );
-};
+  componentWillUnmount(): void {
+    window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('scroll', this.handleResize);
+  }
+
+  handleResize = (): void => {
+    const boardEl = document.getElementById('sudoku-board-root');
+    if (!boardEl) {
+      return;
+    }
+    const rect = boardEl.getBoundingClientRect();
+    this.setState({ boardRect: rect });
+  };
+
+  render(): JSX.Element {
+    const { layers, activeLayerId, eraseMode, onStrokeWillBegin, onBeginStroke, onContinueStroke } = this.props;
+    const { boardRect } = this.state;
+
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          left: boardRect?.left ?? 0,
+          top: boardRect?.top ?? 0,
+          width: boardRect?.width ?? 0,
+          height: boardRect?.height ?? 0,
+          pointerEvents: activeLayerId && boardRect ? 'auto' : 'none',
+          zIndex: 1000,
+        }}
+      >
+        {layers.map((layer) => (
+          layer.visible ? (
+            <LayerCanvas
+              key={layer.id}
+              layer={layer}
+              isActive={activeLayerId === layer.id}
+              boardRect={boardRect}
+              eraseMode={eraseMode}
+              onStrokeWillBegin={onStrokeWillBegin}
+              onBeginStroke={onBeginStroke}
+              onContinueStroke={onContinueStroke}
+            />
+          ) : null
+        ))}
+      </div>
+    );
+  }
+}
 
 interface NotesLayersProps {
   eraseMode: boolean;
@@ -322,12 +343,36 @@ interface NotesLayersProps {
   onStrokeWillBegin: () => void;
 }
 
-export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, setLayers, onStrokeWillBegin }) => {
-  const [activeLayerId, setActiveLayerId] = React.useState<number | null>(null);
-  const nextIdRef = React.useRef(2);
+interface NotesLayersState {
+  activeLayerId: number | null;
+}
 
-  React.useEffect(() => {
+export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersState> {
+  state: NotesLayersState = {
+    activeLayerId: null,
+  };
+
+  private nextIdRef = 2;
+
+  componentDidMount(): void {
+    this.updateBodyForActiveLayer();
+  }
+
+  componentDidUpdate(prevProps: NotesLayersProps, prevState: NotesLayersState): void {
+    if (prevState.activeLayerId !== this.state.activeLayerId || prevProps.layers !== this.props.layers) {
+      this.updateBodyForActiveLayer();
+    }
+  }
+
+  componentWillUnmount(): void {
+    this.clearBodyNotesMode();
+  }
+
+  updateBodyForActiveLayer = (): void => {
     const body = document.body;
+    const { activeLayerId } = this.state;
+    const { layers } = this.props;
+
     if (activeLayerId != null) {
       body.classList.add('notes-mode');
       const activeLayer = layers.find((layer) => layer.id === activeLayerId);
@@ -339,17 +384,19 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
         body.style.setProperty('--notes-accent-color', accent);
       }
     } else {
-      body.classList.remove('notes-mode');
-      body.style.removeProperty('--notes-accent-color');
+      this.clearBodyNotesMode();
     }
-    return () => {
-      body.classList.remove('notes-mode');
-      body.style.removeProperty('--notes-accent-color');
-    };
-  }, [activeLayerId, layers]);
+  };
 
-  const addLayer = () => {
-    const id = nextIdRef.current++;
+  clearBodyNotesMode = (): void => {
+    const body = document.body;
+    body.classList.remove('notes-mode');
+    body.style.removeProperty('--notes-accent-color');
+  };
+
+  addLayer = (): void => {
+    const { layers, setLayers } = this.props;
+    const id = this.nextIdRef++;
     const nonDefaultIndex = layers.length;
     const name = 'Layer ' + nonDefaultIndex.toString();
     setLayers((prev) => [
@@ -364,22 +411,25 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
     ]);
   };
 
-  const removeLayer = (id: number) => {
+  removeLayer = (id: number): void => {
+    const { setLayers } = this.props;
+    this.setState((prev) => ({ activeLayerId: prev.activeLayerId === id ? null : prev.activeLayerId }));
     setLayers((prev) => prev.filter((layer) => layer.id !== id));
-    setActiveLayerId((prev) => (prev === id ? null : prev));
   };
 
-  const toggleVisibility = (id: number) => {
+  toggleVisibility = (id: number): void => {
+    const { setLayers } = this.props;
     setLayers((prev) => prev.map((layer) =>
       layer.id === id ? { ...layer, visible: !layer.visible } : layer,
     ));
   };
 
-  const toggleActive = (id: number) => {
-    setActiveLayerId((prev) => (prev === id ? null : id));
+  toggleActive = (id: number): void => {
+    this.setState((prev) => ({ activeLayerId: prev.activeLayerId === id ? null : id }));
   };
 
-  const cycleColor = (id: number) => {
+  cycleColor = (id: number): void => {
+    const { setLayers } = this.props;
     setLayers((prev) => prev.map((layer) =>
       layer.id === id
         ? { ...layer, colorIndex: (layer.colorIndex + 1) % COLORS.length }
@@ -387,7 +437,8 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
     ));
   };
 
-  const clearLayer = (id: number) => {
+  clearLayer = (id: number): void => {
+    const { setLayers } = this.props;
     setLayers((prev) => prev.map((layer) =>
       layer.id === id
         ? { ...layer, strokes: [] }
@@ -395,7 +446,9 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
     ));
   };
 
-  const beginStroke = (point: Point, erase: boolean) => {
+  beginStroke = (point: Point, erase: boolean): void => {
+    const { setLayers } = this.props;
+    const { activeLayerId } = this.state;
     setLayers((prev) => prev.map((layer) => {
       if (layer.id !== activeLayerId) {
         return layer;
@@ -407,7 +460,9 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
     }));
   };
 
-  const continueStroke = (point: Point, erase: boolean) => {
+  continueStroke = (point: Point, erase: boolean): void => {
+    const { setLayers } = this.props;
+    const { activeLayerId } = this.state;
     setLayers((prev) => prev.map((layer) => {
       if (layer.id !== activeLayerId) {
         return layer;
@@ -429,133 +484,138 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
     }));
   };
 
-  return (
-    <>
-      <NotesLayersOverlay
-        layers={layers}
-        activeLayerId={activeLayerId}
-        eraseMode={eraseMode}
-        onStrokeWillBegin={onStrokeWillBegin}
-        onBeginStroke={beginStroke}
-        onContinueStroke={continueStroke}
-      />
-      <div className="flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-2 shadow-sm ring-1 ring-slate-200">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-slate-800">Note layers</span>
-          <Button
-            size="sm"
-            color="primary"
-            className="rounded-lg border border-slate-900 bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-800"
-            onClick={addLayer}
-          >
-            <span className="flex items-center gap-1">
-              <img src={plusIcon} alt="" className="h-3.5 w-3.5" />
-              <span>Add layer</span>
-            </span>
-          </Button>
-        </div>
-        {layers.map((layer) => {
-          const { background, border, labelIsLight, backgroundRgb } = getLayerRowColors(
-            COLORS[layer.colorIndex % COLORS.length],
-          );
+  render(): JSX.Element {
+    const { eraseMode, layers, onStrokeWillBegin } = this.props;
+    const { activeLayerId } = this.state;
 
-          const isActiveRow = activeLayerId === layer.id;
-          const rowBackground = isActiveRow
-            ? background
-            : `rgba(${backgroundRgb.r}, ${backgroundRgb.g}, ${backgroundRgb.b}, 0.5)`;
-
-          return (
-            <div
-              key={layer.id}
-              style={{
-                backgroundColor: rowBackground,
-                border: `3px solid ${border}`,
-              }}
-              className={LAYER_ROW_CLASS}
+    return (
+      <>
+        <NotesLayersOverlay
+          layers={layers}
+          activeLayerId={activeLayerId}
+          eraseMode={eraseMode}
+          onStrokeWillBegin={onStrokeWillBegin}
+          onBeginStroke={this.beginStroke}
+          onContinueStroke={this.continueStroke}
+        />
+        <div className="flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-2 shadow-sm ring-1 ring-slate-200">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-slate-800">Note layers</span>
+            <Button
+              size="sm"
+              color="primary"
+              className="rounded-lg border border-slate-900 bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-800"
+              onClick={this.addLayer}
             >
-              <span
-                className={`min-w-[6rem] text-sm font-medium ${labelIsLight ? 'text-slate-900' : 'text-white'}`}
-              >
-                {layer.name}
+              <span className="flex items-center gap-1">
+                <img src={plusIcon} alt="" className="h-3.5 w-3.5" />
+                <span>Add layer</span>
               </span>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="bordered"
-                aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
-                className={LAYER_BUTTON_VISIBILITY_CLASS}
-                onClick={() => toggleVisibility(layer.id)}
+            </Button>
+          </div>
+          {layers.map((layer) => {
+            const { background, border, labelIsLight, backgroundRgb } = getLayerRowColors(
+              COLORS[layer.colorIndex % COLORS.length],
+            );
+
+            const isActiveRow = activeLayerId === layer.id;
+            const rowBackground = isActiveRow
+              ? background
+              : `rgba(${backgroundRgb.r}, ${backgroundRgb.g}, ${backgroundRgb.b}, 0.5)`;
+
+            return (
+              <div
+                key={layer.id}
+                style={{
+                  backgroundColor: rowBackground,
+                  border: `3px solid ${border}`,
+                }}
+                className={LAYER_ROW_CLASS}
               >
-                <img
-                  src={layer.visible ? visibleIcon : hiddenIcon}
-                  alt=""
-                  className="h-5 w-5"
-                />
-              </Button>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="bordered"
-                aria-label={activeLayerId === layer.id ? 'Active layer' : 'Activate layer'}
-                className={isActiveRow ? LAYER_BUTTON_ACTIVE_ON_CLASS : LAYER_BUTTON_ACTIVE_CLASS}
-                onClick={() => toggleActive(layer.id)}
-              >
-                <img
-                  src={crosshairIcon}
-                  alt=""
-                  className="h-5 w-5"
-                  style={isActiveRow ? { filter: 'invert(1)' } : undefined}
-                />
-              </Button>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="bordered"
-                aria-label="Change layer color"
-                className={LAYER_BUTTON_COLOR_CLASS}
-                onClick={() => cycleColor(layer.id)}
-              >
-                <img
-                  src={paletteIcon}
-                  alt=""
-                  className="h-5 w-5"
-                />
-              </Button>
-              <Button
-                isIconOnly
-                size="sm"
-                variant="bordered"
-                aria-label="Clear layer drawings"
-                className={LAYER_BUTTON_COLOR_CLASS}
-                onClick={() => clearLayer(layer.id)}
-              >
-                <img
-                  src={eraserIcon}
-                  alt=""
-                  className="h-5 w-5"
-                />
-              </Button>
-              {layer.name !== 'Candidates' && (
+                <span
+                  className={`min-w-[6rem] text-sm font-medium ${labelIsLight ? 'text-slate-900' : 'text-white'}`}
+                >
+                  {layer.name}
+                </span>
                 <Button
                   isIconOnly
                   size="sm"
-                  color="danger"
-                  variant="light"
-                  aria-label="Remove layer"
-                  className={LAYER_BUTTON_REMOVE_CLASS}
-                  onClick={() => removeLayer(layer.id)}
+                  variant="bordered"
+                  aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
+                  className={LAYER_BUTTON_VISIBILITY_CLASS}
+                  onClick={() => this.toggleVisibility(layer.id)}
                 >
                   <img
-                    src={trashIcon}
+                    src={layer.visible ? visibleIcon : hiddenIcon}
                     alt=""
                     className="h-5 w-5"
                   />
                 </Button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </>
-  );
-};
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="bordered"
+                  aria-label={activeLayerId === layer.id ? 'Active layer' : 'Activate layer'}
+                  className={isActiveRow ? LAYER_BUTTON_ACTIVE_ON_CLASS : LAYER_BUTTON_ACTIVE_CLASS}
+                  onClick={() => this.toggleActive(layer.id)}
+                >
+                  <img
+                    src={crosshairIcon}
+                    alt=""
+                    className="h-5 w-5"
+                    style={isActiveRow ? { filter: 'invert(1)' } : undefined}
+                  />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="bordered"
+                  aria-label="Change layer color"
+                  className={LAYER_BUTTON_COLOR_CLASS}
+                  onClick={() => this.cycleColor(layer.id)}
+                >
+                  <img
+                    src={paletteIcon}
+                    alt=""
+                    className="h-5 w-5"
+                  />
+                </Button>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="bordered"
+                  aria-label="Clear layer drawings"
+                  className={LAYER_BUTTON_COLOR_CLASS}
+                  onClick={() => this.clearLayer(layer.id)}
+                >
+                  <img
+                    src={eraserIcon}
+                    alt=""
+                    className="h-5 w-5"
+                  />
+                </Button>
+                {layer.name !== 'Candidates' && (
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    color="danger"
+                    variant="light"
+                    aria-label="Remove layer"
+                    className={LAYER_BUTTON_REMOVE_CLASS}
+                    onClick={() => this.removeLayer(layer.id)}
+                  >
+                    <img
+                      src={trashIcon}
+                      alt=""
+                      className="h-5 w-5"
+                    />
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </>
+    );
+  }
+}
