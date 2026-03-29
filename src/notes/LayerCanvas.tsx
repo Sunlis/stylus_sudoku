@@ -96,8 +96,6 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     const strokes = layer.strokes;
-    const drawStrokes = strokes.filter((s) => !s.erase);
-    const eraseStrokes = strokes.filter((s) => s.erase);
 
     if (layer.texts && layer.texts.length > 0) {
       ctx.save();
@@ -113,31 +111,22 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
       ctx.restore();
     }
 
-    drawStrokes.forEach((stroke) => {
+    // Replay strokes in the order they were created so that
+    // later draw strokes can appear on top of earlier erase strokes.
+    strokes.forEach((stroke) => {
       if (stroke.points.length === 0) {
         return;
       }
       ctx.save();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
-      ctx.lineWidth = STROKE_WIDTH;
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+      if (stroke.erase) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = ERASER_WIDTH;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
+        ctx.lineWidth = STROKE_WIDTH;
       }
-      ctx.stroke();
-      ctx.restore();
-    });
-
-    eraseStrokes.forEach((stroke) => {
-      if (stroke.points.length === 0) {
-        return;
-      }
-      ctx.save();
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.strokeStyle = 'rgba(0,0,0,1)';
-      ctx.lineWidth = ERASER_WIDTH;
       ctx.beginPath();
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
       for (let i = 1; i < stroke.points.length; i++) {
