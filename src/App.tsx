@@ -332,6 +332,11 @@ function App() {
           <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
             <BoardExport cells={cells} />
           </div>
+          <div className="mt-1 text-[10px] text-slate-500">
+            Built {new Date(__APP_BUILD_TIME__).toLocaleString()} (
+            {__APP_COMMIT__}
+            )
+          </div>
         </main>
       </div>
       {recognitionCandidates && (
