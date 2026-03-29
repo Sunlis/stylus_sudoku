@@ -330,14 +330,6 @@ function App() {
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
       <div className="flex w-full max-w-3xl flex-col items-stretch gap-3">
         <main className="mt-0 flex flex-col items-center gap-2">
-          <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
-            <Board
-              cells={cells}
-              eraseMode={eraseMode}
-              onChangeCell={handleChangeCell}
-              onRecognitionCandidates={handleRecognitionCandidates}
-            />
-          </div>
           <Controls
             onNewPuzzle={handleNewPuzzle}
             eraseMode={eraseMode}
@@ -358,6 +350,14 @@ function App() {
             }}
             canUndo={history.length > 0}
           />
+          <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
+            <Board
+              cells={cells}
+              eraseMode={eraseMode}
+              onChangeCell={handleChangeCell}
+              onRecognitionCandidates={handleRecognitionCandidates}
+            />
+          </div>
           <NotesLayers
             eraseMode={eraseMode}
             layers={layers}
