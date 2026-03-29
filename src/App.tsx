@@ -7,9 +7,9 @@ import { Controls } from '@app/controls';
 import { NotesLayers } from '@app/notes/NotesLayers';
 import { Difficulty } from '@app/types';
 import { userStorage } from '@app/storage';
-import { isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
+import { isRowValid, isColumnValid, isBoxValid, fillCandidates } from '@app/sudoku';
 import { CellContents } from '@app/types/board';
-import { NoteLayer } from '@app/types/notes';
+import { NoteLayer, NoteText } from '@app/types/notes';
 
 const getNewBoard = (d: Difficulty) => {
   const out: CellContents[][] = [];
@@ -26,12 +26,8 @@ const getNewBoard = (d: Difficulty) => {
       value: value,
       user: !value,
     };
-    if (!value) {
-      const candidates: number[] = [];
-      out[row][col].candidates = candidates;
-    }
   }
-  return out;
+  return fillCandidates(out);
 };
 
 const recomputeValidity = (board: CellContents[][]): CellContents[][] => {
@@ -98,6 +94,7 @@ function App() {
         colorIndex: 0,
         visible: true,
         strokes: [],
+        texts: [],
       },
     ];
   });
@@ -159,12 +156,82 @@ function App() {
           point.y >= minY && point.y <= maxY
         ));
       });
-      if (filteredStrokes === layer.strokes) {
+      const filteredTexts = layer.texts
+        ? layer.texts.filter((t) => !(
+          t.x >= minX && t.x <= maxX &&
+          t.y >= minY && t.y <= maxY
+        ))
+        : layer.texts;
+
+      if (filteredStrokes === layer.strokes && filteredTexts === layer.texts) {
         return layer;
       }
       return {
         ...layer,
         strokes: filteredStrokes,
+        texts: filteredTexts,
+      };
+    }));
+  };
+
+  const handleDrawCandidates = () => {
+    const boardEl = document.getElementById('sudoku-board-root');
+    if (!boardEl) {
+      return;
+    }
+    const rect = boardEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+
+    const cellWidth = rect.width / 9;
+    const cellHeight = rect.height / 9;
+    const slotWidth = cellWidth / 3;
+    const slotHeight = cellHeight / 3;
+
+    const texts: NoteText[] = [];
+
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const cell = cells[row]?.[col];
+        if (!cell || !cell.candidates || cell.candidates.length === 0) {
+          continue;
+        }
+
+        for (const cand of cell.candidates) {
+          const idx = cand - 1;
+          if (idx < 0 || idx > 8) {
+            continue;
+          }
+          const gridX = idx % 3;
+          const gridY = Math.floor(idx / 3);
+
+          const baseX = col * cellWidth;
+          const baseY = row * cellHeight;
+          const x = baseX + (gridX + 0.5) * slotWidth;
+          const y = baseY + (gridY + 0.5) * slotHeight;
+
+          texts.push({ x, y, text: String(cand) });
+        }
+      }
+    }
+
+    // If there are no candidates, do nothing.
+    if (texts.length === 0) {
+      return;
+    }
+
+    // Capture history so this operation can be undone.
+    pushHistory(cells, layers);
+
+    setLayers((prevLayers) => prevLayers.map((layer) => {
+      if (layer.name !== 'Candidates') {
+        return layer;
+      }
+      return {
+        ...layer,
+        strokes: [],
+        texts,
       };
     }));
   };
@@ -222,6 +289,7 @@ function App() {
             }}
             eraseMode={eraseMode}
             onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+            onDrawCandidates={handleDrawCandidates}
             onUndo={() => {
               setHistory((prevHistory) => {
                 if (prevHistory.length === 0) {

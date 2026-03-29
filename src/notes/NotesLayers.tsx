@@ -111,6 +111,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
         colorIndex: nonDefaultIndex % COLORS.length,
         visible: true,
         strokes: [],
+        texts: [],
       },
     ]);
   };
@@ -145,7 +146,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
     const { setLayers } = this.props;
     setLayers((prev) => prev.map((layer) =>
       layer.id === id
-        ? { ...layer, strokes: [] }
+        ? { ...layer, strokes: [], texts: [] }
         : layer,
     ));
   };

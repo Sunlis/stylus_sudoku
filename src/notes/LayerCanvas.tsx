@@ -95,21 +95,49 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    const strokes = layer.strokes;
+    const drawStrokes = strokes.filter((s) => !s.erase);
+    const eraseStrokes = strokes.filter((s) => s.erase);
 
-    layer.strokes.forEach((stroke) => {
+    if (layer.texts && layer.texts.length > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = COLORS[layer.colorIndex % COLORS.length];
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const baseSize = Math.min(width, height) / 30;
+      ctx.font = `${baseSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
+      for (const t of layer.texts) {
+        ctx.fillText(t.text, t.x, t.y);
+      }
+      ctx.restore();
+    }
+
+    drawStrokes.forEach((stroke) => {
       if (stroke.points.length === 0) {
         return;
       }
       ctx.save();
-      if (stroke.erase) {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)';
-        ctx.lineWidth = ERASER_WIDTH;
-      } else {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
-        ctx.lineWidth = STROKE_WIDTH;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = COLORS[layer.colorIndex % COLORS.length];
+      ctx.lineWidth = STROKE_WIDTH;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i++) {
+        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
       }
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    eraseStrokes.forEach((stroke) => {
+      if (stroke.points.length === 0) {
+        return;
+      }
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+      ctx.lineWidth = ERASER_WIDTH;
       ctx.beginPath();
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
       for (let i = 1; i < stroke.points.length; i++) {

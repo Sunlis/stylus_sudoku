@@ -61,3 +61,71 @@ export function isBoxValid(board: CellContents[][], boxRow: number, boxCol: numb
   }
   return true;
 }
+
+// Just naively fill all empty cells with all 9 numbers.
+function fillAllCandidates(board: CellContents[][]): CellContents[][] {
+  return board.map((rowArr, row) => {
+    return rowArr.map((cell, col) => {
+      if (cell.value !== undefined) {
+        return cell;
+      }
+      return {
+        ...cell,
+        candidates: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      };
+    });
+  });
+}
+
+// Clear the given cell's number from all relevant candidates.
+export function clearRelatedCandidates(board: CellContents[][], cellRow: number, cellCol: number): CellContents[][] {
+  const value = board[cellRow][cellCol].value;
+  if (value === undefined) {
+    return board;
+  }
+
+  // Row
+  for (let col = 0; col < 9; col++) {
+    const cell = board[cellRow][col];
+    if (!cell.candidates) {
+      continue;
+    }
+    cell.candidates = cell.candidates.filter((candidate) => candidate !== value);
+  }
+
+  // Column
+  for (let row = 0; row < 9; row++) {
+    const cell = board[row][cellCol];
+    if (!cell.candidates) {
+      continue;
+    }
+    cell.candidates = cell.candidates.filter((candidate) => candidate !== value);
+  }
+
+  // Box
+  const boxRow = Math.floor(cellRow / 3);
+  const boxCol = Math.floor(cellCol / 3);
+  for (let row = boxRow * 3; row < boxRow * 3 + 3; row++) {
+    for (let col = boxCol * 3; col < boxCol * 3 + 3; col++) {
+      const cell = board[row][col];
+      if (!cell.candidates) {
+        continue;
+      }
+      cell.candidates = cell.candidates.filter((candidate) => candidate !== value);
+    }
+  }
+
+  return board;
+}
+
+export function fillCandidates(board: CellContents[][]): CellContents[][] {
+  const newBoard: CellContents[][] = fillAllCandidates(board);
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      if (newBoard[row][col].value !== undefined) {
+        clearRelatedCandidates(newBoard, row, col);
+      }
+    }
+  }
+  return newBoard;
+}

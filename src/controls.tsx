@@ -4,6 +4,7 @@ import pencilIcon from '../static/pencil.svg';
 import eraserIcon from '../static/eraser.svg';
 import gridIcon from '../static/grid.svg';
 import undoIcon from '../static/undo.svg';
+import overflowIcon from '../static/overflow.svg';
 import { Difficulty } from './types';
 import { userStorage } from './storage';
 
@@ -13,6 +14,7 @@ interface ControlsProps {
   onToggleEraseMode: () => void;
   onUndo: () => void;
   canUndo: boolean;
+  onDrawCandidates: () => void;
 }
 
 interface ControlsState {
@@ -22,6 +24,7 @@ interface ControlsState {
 
 export class Controls extends React.Component<ControlsProps, ControlsState> {
   dialogRef: React.RefObject<HTMLDialogElement> = React.createRef();
+  overflowDialogRef: React.RefObject<HTMLDialogElement> = React.createRef();
 
   constructor(props: ControlsProps) {
     super(props);
@@ -76,6 +79,21 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
                 className="h-6 w-6"
               />
             </Button>
+            <Button
+              isIconOnly
+              aria-label="More actions"
+              onClick={() => {
+                this.overflowDialogRef.current?.showModal();
+              }}
+              variant="bordered"
+              className="h-10 w-10 rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
+            >
+              <img
+                src={overflowIcon}
+                alt=""
+                className="h-6 w-6"
+              />
+            </Button>
           </div>
         </div>
         <dialog
@@ -87,6 +105,10 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             boxShadow: '0 16px 40px rgba(15, 23, 42, 0.35)',
             maxWidth: '420px',
             width: '90vw',
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
           }}
         >
           <div style={{
@@ -127,6 +149,51 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               }}
             >
               Cancel
+            </Button>
+          </div>
+        </dialog>
+        <dialog
+          ref={this.overflowDialogRef}
+          style={{
+            border: 'none',
+            borderRadius: '0.75rem',
+            padding: 0,
+            boxShadow: '0 16px 40px rgba(15, 23, 42, 0.35)',
+            maxWidth: '420px',
+            width: '90vw',
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            padding: '1.25rem 1.5rem 1.25rem 1.5rem',
+            backgroundColor: 'white',
+            borderRadius: '0.75rem',
+          }}>
+            <h2 className="text-base font-semibold text-slate-900" style={{ padding: 0, margin: 0 }}>More actions</h2>
+            <Button
+              className="mt-1 rounded-lg border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-800"
+              onClick={() => {
+                this.overflowDialogRef.current?.close();
+                this.props.onDrawCandidates();
+              }}
+              color="primary"
+            >
+              Draw Candidates
+            </Button>
+            <Button
+              className="mt-1 rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
+              variant="bordered"
+              onClick={() => {
+                this.overflowDialogRef.current?.close();
+              }}
+            >
+              Close
             </Button>
           </div>
         </dialog>

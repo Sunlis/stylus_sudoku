@@ -8,10 +8,17 @@ export type Stroke = {
   erase?: boolean;
 };
 
+export type NoteText = {
+  x: number;
+  y: number;
+  text: string;
+};
+
 export type NoteLayer = {
   id: number;
   name: string;
   colorIndex: number;
   visible: boolean;
   strokes: Stroke[];
+  texts?: NoteText[];
 };
