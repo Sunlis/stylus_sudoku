@@ -179,6 +179,17 @@ function App() {
   };
 
   const handleDrawCandidates = () => {
+    // Recompute candidates based on the current board state (including
+    // user-entered values) so drawn candidates reflect the live puzzle.
+    const boardForCandidates = fillCandidates(
+      cells.map((row) =>
+        row.map((cell) => ({
+          ...cell,
+          candidates: undefined,
+        })),
+      ),
+    );
+
     const boardEl = document.getElementById('sudoku-board-root');
     if (!boardEl) {
       return;
@@ -197,7 +208,7 @@ function App() {
 
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
-        const cell = cells[row]?.[col];
+        const cell = boardForCandidates[row]?.[col];
         if (!cell || !cell.candidates || cell.candidates.length === 0) {
           continue;
         }
