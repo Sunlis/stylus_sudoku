@@ -86,7 +86,6 @@ class Cell extends React.Component<CellProps> {
       </div>;
     }
     let color = '#000000';
-    let weight = 'normal';
     let bg = 'unset';
     let fontSize = '1rem';
     let borderLeft = 1;
@@ -98,7 +97,6 @@ class Cell extends React.Component<CellProps> {
       borderTop = 2;
     }
     if (this.props.value !== undefined) {
-      weight = '500';
       if (this.props.user) {
         color = '#000';
         fontSize = '1.1rem';
@@ -112,9 +110,22 @@ class Cell extends React.Component<CellProps> {
       bg = '#ffcccc';
     }
 
+    const cellClassNames = [
+      'flex h-[10vw]',
+      'w-[10vw]',
+      'items-center',
+      'justify-center',
+      'border',
+      'border-slate-800/80',
+      'bg-white',
+      'text-slate-900',
+      'sudoku-cell',
+      (this.props.user ? 'sudoku-cell-user' : ''),
+    ].filter(a => !!a).join(' ');
+
     return (
       <div
-        className="flex h-[10vw] w-[10vw] items-center justify-center border border-slate-800/80 bg-white text-slate-900"
+        className={cellClassNames}
         style={{
           borderLeftWidth: borderLeft,
           borderTopWidth: borderTop,
@@ -123,8 +134,6 @@ class Cell extends React.Component<CellProps> {
           boxSizing: 'border-box',
           backgroundColor: bg,
           color,
-          fontWeight: weight,
-          fontSize,
         }}
       >
         {interior}
