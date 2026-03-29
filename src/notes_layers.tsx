@@ -535,21 +535,23 @@ export const NotesLayers: React.FC<NotesLayersProps> = ({ eraseMode, layers, set
                   className="h-5 w-5"
                 />
               </Button>
-              <Button
-                isIconOnly
-                size="sm"
-                color="danger"
-                variant="light"
-                aria-label="Remove layer"
-                className={LAYER_BUTTON_REMOVE_CLASS}
-                onClick={() => removeLayer(layer.id)}
-              >
-                <img
-                  src={trashIcon}
-                  alt=""
-                  className="h-5 w-5"
-                />
-              </Button>
+              {layer.name !== 'Candidates' && (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  color="danger"
+                  variant="light"
+                  aria-label="Remove layer"
+                  className={LAYER_BUTTON_REMOVE_CLASS}
+                  onClick={() => removeLayer(layer.id)}
+                >
+                  <img
+                    src={trashIcon}
+                    alt=""
+                    className="h-5 w-5"
+                  />
+                </Button>
+              )}
             </div>
           );
         })}

@@ -7,6 +7,7 @@ import { Controls } from './controls';
 import { NotesLayers, NoteLayer } from './notes_layers';
 import { Difficulty } from './types';
 import { userStorage } from './storage';
+import { isRowValid, isColumnValid, isBoxValid } from './sudoku';
 
 const getNewBoard = (d: Difficulty) => {
   const out: CellContents[][] = [];
@@ -31,13 +32,57 @@ const getNewBoard = (d: Difficulty) => {
   return out;
 };
 
+const recomputeValidity = (board: CellContents[][]): CellContents[][] => {
+  const invalid: boolean[][] = Array.from({ length: 9 }, () =>
+    Array<boolean>(9).fill(false),
+  );
+
+  // Mark invalid rows
+  for (let row = 0; row < 9; row++) {
+    if (!isRowValid(board, row)) {
+      for (let col = 0; col < 9; col++) {
+        invalid[row][col] = true;
+      }
+    }
+  }
+
+  // Mark invalid columns
+  for (let col = 0; col < 9; col++) {
+    if (!isColumnValid(board, col)) {
+      for (let row = 0; row < 9; row++) {
+        invalid[row][col] = true;
+      }
+    }
+  }
+
+  // Mark invalid boxes
+  for (let boxRow = 0; boxRow < 3; boxRow++) {
+    for (let boxCol = 0; boxCol < 3; boxCol++) {
+      if (!isBoxValid(board, boxRow, boxCol)) {
+        for (let row = boxRow * 3; row < boxRow * 3 + 3; row++) {
+          for (let col = boxCol * 3; col < boxCol * 3 + 3; col++) {
+            invalid[row][col] = true;
+          }
+        }
+      }
+    }
+  }
+
+  return board.map((rowArr, row) =>
+    rowArr.map((cell, col) => ({
+      ...cell,
+      valid: invalid[row][col] ? false : undefined,
+    })),
+  );
+};
+
 function App() {
   const [cells, setCells] = React.useState<CellContents[][]>(() => {
     const stored = userStorage.getBoardState();
     if (stored) {
-      return stored;
+      return recomputeValidity(stored);
     }
-    return getNewBoard(userStorage.getDifficulty());
+    return recomputeValidity(getNewBoard(userStorage.getDifficulty()));
   });
   const [layers, setLayers] = React.useState<NoteLayer[]>(() => {
     const stored = userStorage.getNotesLayers<NoteLayer[]>();
@@ -123,18 +168,18 @@ function App() {
   };
 
   const handleChangeCell = (row: number, col: number, contents: CellContents) => {
+    const nextCells = cells.map((rowArr, rIndex) => {
+      if (rIndex !== row) return rowArr;
+      return rowArr.map((cell, cIndex) => {
+        if (cIndex !== col) return cell;
+        return contents;
+      });
+    });
+
     // Capture a snapshot of the current board and layers for undo.
     pushHistory(cells, layers);
 
-    setCells((prevCells) => {
-      return prevCells.map((rowArr, rIndex) => {
-        if (rIndex !== row) return rowArr;
-        return rowArr.map((cell, cIndex) => {
-          if (cIndex !== col) return cell;
-          return contents;
-        });
-      });
-    });
+    setCells(recomputeValidity(nextCells));
 
     if (contents.user && contents.value !== undefined) {
       clearCandidatesRegion(row, col);
