@@ -16,7 +16,7 @@ interface Props {
   onNumberRecognized?: (num: number) => void;
   onClearCell?: () => void;
   onStateChange?: (state: InputState) => void;
-  onCandidatesRecognized?: (candidates: string[]) => void;
+  onCandidatesRecognized?: (outcome: RecognitionOutcome) => void;
   eraseMode?: boolean;
   storageKey?: string;
 }
@@ -193,10 +193,13 @@ export class InputPanel extends React.Component<Props, State> {
       { width: canvas.width, height: canvas.height })
       .then((outcome: RecognitionOutcome) => {
         const { input, candidates } = outcome;
-        console.log(`Handwriting recognized text`, input, candidates);
+        console.log(`Handwriting recognized text`, input, candidates, {
+          local: outcome.localCandidates,
+          remote: outcome.remoteCandidates,
+        });
 
         if (candidates && candidates.length > 0) {
-          this.props.onCandidatesRecognized?.(candidates);
+          this.props.onCandidatesRecognized?.(outcome);
         }
 
         if (this.props.eraseMode) {

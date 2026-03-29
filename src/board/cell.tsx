@@ -2,13 +2,14 @@ import React from "react";
 
 import { InputPanel } from "@app/input_panel";
 import { CellContents } from "@app/types/board";
+import type { RecognitionOutcome } from "@app/handwriting";
 
 export interface CellProps extends CellContents {
   column: number;
   row: number;
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
-  onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
+  onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
 }
 
 export class Cell extends React.Component<CellProps> {
@@ -40,8 +41,8 @@ export class Cell extends React.Component<CellProps> {
           onClearCell={() => {
             this.props.setNumber?.(null);
           }}
-          onCandidatesRecognized={(candidates) => {
-            this.props.onRecognitionCandidates?.(this.props.row, this.props.column, candidates);
+          onCandidatesRecognized={(outcome) => {
+            this.props.onRecognitionCandidates?.(this.props.row, this.props.column, outcome);
           }}
         />
         {interior}

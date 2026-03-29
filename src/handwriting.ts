@@ -39,7 +39,11 @@ export type Input =
 
 export type RecognitionOutcome = {
   input: Input;
+  // Final merged candidate list used to decide the input.
   candidates: string[];
+  // Raw candidates from each path, when available.
+  localCandidates?: string[];
+  remoteCandidates?: string[];
 };
 import { recognizeLocal } from './local_recognizer';
 
@@ -98,21 +102,37 @@ function recognizeWithGoogle(trace: Trace, options: Options): Promise<Recognitio
     xhr.open('POST', 'https://www.google.com.tw/inputtools/request?ime=handwriting&app=mobilesearch&cs=1&oe=UTF-8');
     xhr.setRequestHeader('content-type', 'application/json');
     xhr.send(data);
-  }).then((results: string[]) => buildOutcomeFromCandidates(results));
+  }).then((results: string[]) => {
+    const outcome = buildOutcomeFromCandidates(results);
+    // For remote-only recognition, treat the outcome's candidates as remote.
+    outcome.remoteCandidates = [...outcome.candidates];
+    return outcome;
+  });
 }
 
 export const recognize = function (trace: Trace, options: Options): Promise<RecognitionOutcome> {
-  // First, try local recognition (if a model is available). If that fails
-  // or yields no candidates, fall back to the existing Google API.
-  return recognizeLocal(trace)
-    .then((localResult) => {
-      if (localResult && localResult.candidates.length > 0) {
-        console.log('local result', localResult.candidates);
-        return buildOutcomeFromCandidates(localResult.candidates);
-      }
-      return recognizeWithGoogle(trace, options);
-    })
-    .catch(() => recognizeWithGoogle(trace, options));
+  // Run local and remote recognition in parallel when possible.
+  const localPromise = recognizeLocal(trace).catch(() => null);
+  const remotePromise = recognizeWithGoogle(trace, options).catch(() => null);
+
+  return Promise.all([localPromise, remotePromise]).then(([localResult, remoteOutcome]) => {
+    const remoteCandidates = remoteOutcome?.candidates ?? [];
+    const localCandidates = localResult?.candidates ?? [];
+
+    // Choose a primary list to drive the input: prefer remote when available.
+    const primaryCandidates = remoteCandidates.length > 0
+      ? remoteCandidates
+      : localCandidates;
+
+    const outcome = buildOutcomeFromCandidates(primaryCandidates);
+    if (localCandidates.length > 0) {
+      outcome.localCandidates = [...localCandidates];
+    }
+    if (remoteCandidates.length > 0) {
+      outcome.remoteCandidates = [...remoteCandidates];
+    }
+    return outcome;
+  });
 };
 
 export class TraceBuilder {

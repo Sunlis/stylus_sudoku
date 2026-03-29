@@ -10,6 +10,7 @@ import { userStorage } from '@app/storage';
 import { isRowValid, isColumnValid, isBoxValid, fillCandidates } from '@app/sudoku';
 import { CellContents } from '@app/types/board';
 import { NoteLayer, NoteText } from '@app/types/notes';
+import type { RecognitionOutcome } from '@app/handwriting';
 
 const getNewBoard = (d: Difficulty) => {
   const out: CellContents[][] = [];
@@ -102,7 +103,10 @@ function App() {
   type HistoryEntry = { cells: CellContents[][]; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
-  const [recognitionCandidates, setRecognitionCandidates] = React.useState<string[] | null>(null);
+  const [recognitionCandidates, setRecognitionCandidates] = React.useState<{
+    local?: string[];
+    remote?: string[];
+  } | null>(null);
   const recognitionToastTimeoutRef = React.useRef<number | null>(null);
 
   const pushHistory = React.useCallback((snapshotCells: CellContents[][], snapshotLayers: NoteLayer[]) => {
@@ -255,9 +259,12 @@ function App() {
     }
   };
 
-  const handleRecognitionCandidates = (row: number, col: number, candidates: string[]) => {
-    // Show a simple debug toast with the raw candidate strings.
-    setRecognitionCandidates(candidates);
+  const handleRecognitionCandidates = (row: number, col: number, outcome: RecognitionOutcome) => {
+    // Show a simple debug toast with the raw candidate strings from both paths.
+    setRecognitionCandidates({
+      local: outcome.localCandidates,
+      remote: outcome.remoteCandidates ?? outcome.candidates,
+    });
 
     if (recognitionToastTimeoutRef.current != null) {
       window.clearTimeout(recognitionToastTimeoutRef.current);
@@ -317,7 +324,7 @@ function App() {
           </div>
         </main>
       </div>
-      {recognitionCandidates && recognitionCandidates.length > 0 && (
+      {recognitionCandidates && (
         <div
           className="fixed inset-x-0 bottom-4 flex justify-center px-4"
           style={{ pointerEvents: 'none' }}
@@ -327,9 +334,18 @@ function App() {
             style={{ pointerEvents: 'auto' }}
           >
             <div className="font-semibold mb-1">Recognition candidates</div>
-            <div className="break-words">
-              {recognitionCandidates.join(', ')}
-            </div>
+            {recognitionCandidates.local && recognitionCandidates.local.length > 0 && (
+              <div className="break-words mb-1">
+                <span className="font-semibold">Local: </span>
+                <span>{recognitionCandidates.local.join(', ')}</span>
+              </div>
+            )}
+            {recognitionCandidates.remote && recognitionCandidates.remote.length > 0 && (
+              <div className="break-words">
+                <span className="font-semibold">Remote: </span>
+                <span>{recognitionCandidates.remote.join(', ')}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
