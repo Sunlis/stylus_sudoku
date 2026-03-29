@@ -275,6 +275,21 @@ function App() {
     }, 4000);
   };
 
+  const handleNewPuzzle = (difficulty: Difficulty) => {
+    setCells((prevCells) => {
+      // Capture current board + layers for undo before resetting.
+      pushHistory(prevCells, layers);
+      return getNewBoard(difficulty);
+    });
+
+    // Clear all note layer contents (strokes/text) while preserving layers.
+    setLayers((prevLayers) => prevLayers.map((layer) => ({
+      ...layer,
+      strokes: [],
+      texts: layer.texts ? [] : layer.texts,
+    })));
+  };
+
   return (
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
       <div className="flex w-full max-w-3xl flex-col items-stretch gap-3">
@@ -288,12 +303,7 @@ function App() {
             />
           </div>
           <Controls
-            onNewPuzzle={(difficulty) => {
-              setCells((prevCells) => {
-                pushHistory(prevCells, layers);
-                return getNewBoard(difficulty);
-              });
-            }}
+            onNewPuzzle={handleNewPuzzle}
             eraseMode={eraseMode}
             onToggleEraseMode={() => setEraseMode((prev) => !prev)}
             onDrawCandidates={handleDrawCandidates}
