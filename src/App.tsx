@@ -6,7 +6,7 @@ import { Controls } from '@app/controls';
 import { NotesLayers } from '@app/notes/NotesLayers';
 import { Difficulty } from '@app/types';
 import { userStorage } from '@app/storage';
-import { fillCandidates } from '@app/sudoku';
+import { fillCandidates, isBoardValid } from '@app/sudoku';
 import { CellContents } from '@app/types/board';
 import { NoteLayer, NoteText } from '@app/types/notes';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
@@ -214,8 +214,15 @@ function App() {
     });
 
     pushHistory(cells, layers);
+    const validated = recomputeValidity(nextCells);
+    setCells(validated);
 
-    setCells(recomputeValidity(nextCells));
+    const allFilled = validated.every((rowArr) =>
+      rowArr.every((cell) => cell.value !== undefined),
+    );
+    if (allFilled && isBoardValid(validated)) {
+      victoryRef.current?.show();
+    }
 
     if (contents.user && contents.value !== undefined) {
       clearCandidatesRegion(row, col);
