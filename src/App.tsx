@@ -129,6 +129,59 @@ function App() {
     );
   };
 
+  const clearCandidateDigitFromPeers = (row: number, col: number, digit: number) => {
+    if (digit < 1 || digit > 9) {
+      return;
+    }
+
+    const boardEl = document.getElementById('sudoku-board-root');
+    if (!boardEl) {
+      return;
+    }
+    const rect = boardEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+
+    const cellWidth = rect.width / 9;
+    const cellHeight = rect.height / 9;
+
+    setLayers((prevLayers) =>
+      prevLayers.map((layer) => {
+        if (layer.name !== 'Candidates' || !layer.texts) {
+          return layer;
+        }
+
+        const filteredTexts = layer.texts.filter((t) => {
+          const cellRow = Math.floor(t.y / cellHeight);
+          const cellCol = Math.floor(t.x / cellWidth);
+
+          const sameRow = cellRow === row;
+          const sameCol = cellCol === col;
+          const sameBox =
+            Math.floor(cellRow / 3) === Math.floor(row / 3) &&
+            Math.floor(cellCol / 3) === Math.floor(col / 3);
+
+          const isPeer = sameRow || sameCol || sameBox;
+
+          if (isPeer && t.text === String(digit)) {
+            return false;
+          }
+          return true;
+        });
+
+        if (filteredTexts === layer.texts) {
+          return layer;
+        }
+
+        return {
+          ...layer,
+          texts: filteredTexts,
+        };
+      }),
+    );
+  };
+
   const handleDrawCandidates = () => {
     const boardForCandidates = fillCandidates(
       cells.map((row) =>
@@ -226,6 +279,7 @@ function App() {
 
     if (contents.user && contents.value !== undefined) {
       clearCandidatesRegion(row, col);
+      clearCandidateDigitFromPeers(row, col, contents.value);
     }
   };
 
