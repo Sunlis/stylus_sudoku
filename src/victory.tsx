@@ -35,7 +35,10 @@ export class VictoryDialog extends React.Component<VictoryProps, {}> {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#111' }}>Victory!</h2>
           <button
-            onClick={this.props.onNewGame}
+            onClick={() => {
+              this.props.onNewGame();
+              this.ref.current?.close();
+            }}
             className={PRIMARY_BUTTON}
           >
             Start new game
