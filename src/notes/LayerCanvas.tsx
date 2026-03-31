@@ -175,6 +175,13 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     if (!isDrawing || !isActive || !boardRect) {
       return;
     }
+
+    // Pointer events from a stylus can fire when the pen is merely near
+    // the screen (hovering) with no buttons pressed. Guard against that
+    // so we only draw while the pointer is actually down.
+    if (event.buttons === 0) {
+      return;
+    }
     event.preventDefault();
     const point = this.getRelativePoint(event);
     onContinueStroke(point, isErasing);
