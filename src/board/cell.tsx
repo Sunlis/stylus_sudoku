@@ -70,7 +70,11 @@ export class Cell extends React.Component<CellProps> {
       color = '#444';
     }
     if (this.props.valid === false) {
-      bg = '#ffcccc';
+      if (this.props.user) {
+        bg = 'rgba(255, 100, 100, 0.3)';
+      } else {
+        bg = 'rgba(100, 0, 0, 0.3)';
+      }
     }
 
     const cellClassNames = [
