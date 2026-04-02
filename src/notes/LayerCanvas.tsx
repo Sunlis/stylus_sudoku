@@ -17,6 +17,7 @@ interface LayerCanvasProps {
   isActive: boolean;
   boardRect: DOMRect | null;
   eraseMode: boolean;
+  highlightDigit?: number;
   onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
@@ -41,7 +42,11 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
   }
 
   componentDidUpdate(prevProps: LayerCanvasProps): void {
-    if (prevProps.boardRect !== this.props.boardRect || prevProps.layer !== this.props.layer) {
+    if (
+      prevProps.boardRect !== this.props.boardRect ||
+      prevProps.layer !== this.props.layer ||
+      prevProps.highlightDigit !== this.props.highlightDigit
+    ) {
       this.resizeCanvas();
       this.redraw();
     }
@@ -75,7 +80,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
 
   redraw = (): void => {
     const canvas = this.canvasRef.current;
-    const { boardRect, layer } = this.props;
+    const { boardRect, layer, highlightDigit } = this.props;
     if (!canvas || !boardRect) {
       return;
     }
@@ -91,21 +96,53 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     }
     const width = boardRect.width;
     const height = boardRect.height;
+    const baseSize = Math.min(width, height) / 30;
     ctx.clearRect(0, 0, width, height);
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     const strokes = layer.strokes;
 
+    // If a digit is selected for highlighting on the Candidates layer,
+    // draw a solid background patch in the 1/9th-cell region *before*
+    // text and strokes. Eraser strokes (destination-out) applied later
+    // will remove both the glyph and its background without any pixel checks.
+    if (highlightDigit && layer.name === 'Candidates' && layer.texts && layer.texts.length > 0) {
+      const slotWidth = width / 27;  // 9 cells * 3 slots per row
+      const slotHeight = height / 27;
+      const radius = Math.min(slotWidth, slotHeight) * 0.5;
+      const target = String(highlightDigit);
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      // On e-ink, a medium-dark grey background is more visible than
+      // a subtle colour shift.
+      ctx.fillStyle = 'rgb(45, 93, 128)';
+      for (const t of layer.texts) {
+        if (t.text !== target) {
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     if (layer.texts && layer.texts.length > 0) {
       ctx.save();
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = COLORS[layer.colorIndex % COLORS.length];
+      const baseColor = COLORS[layer.colorIndex % COLORS.length];
+      const isCandidates = layer.name === 'Candidates';
+      const target = highlightDigit != null ? String(highlightDigit) : null;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      const baseSize = Math.min(width, height) / 30;
       ctx.font = `${baseSize}px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
       for (const t of layer.texts) {
+        if (isCandidates && target && t.text === target) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+        } else {
+          ctx.fillStyle = baseColor;
+        }
         ctx.fillText(t.text, t.x, t.y);
       }
       ctx.restore();
@@ -135,6 +172,10 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
       ctx.stroke();
       ctx.restore();
     });
+
+    // The background for highlighted candidates is drawn *before* strokes,
+    // so destination-out eraser strokes naturally remove both the glyph
+    // and its highlight without requiring any extra bookkeeping.
   };
 
   isErasePointer = (event: React.PointerEvent<HTMLCanvasElement>): boolean => {

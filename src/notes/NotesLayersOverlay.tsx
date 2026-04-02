@@ -7,6 +7,7 @@ interface NotesLayersOverlayProps {
   layers: NoteLayer[];
   activeLayerId: number | null;
   eraseMode: boolean;
+  highlightDigit?: number;
   onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
@@ -48,7 +49,7 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
   };
 
   render(): JSX.Element {
-    const { layers, activeLayerId, eraseMode, onStrokeWillBegin, onBeginStroke, onContinueStroke } = this.props;
+    const { layers, activeLayerId, eraseMode, highlightDigit, onStrokeWillBegin, onBeginStroke, onContinueStroke } = this.props;
     const { boardRect } = this.state;
 
     return (
@@ -71,6 +72,7 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
               isActive={activeLayerId === layer.id}
               boardRect={boardRect}
               eraseMode={eraseMode}
+              highlightDigit={highlightDigit}
               onStrokeWillBegin={onStrokeWillBegin}
               onBeginStroke={onBeginStroke}
               onContinueStroke={onContinueStroke}

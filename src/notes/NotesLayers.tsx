@@ -45,6 +45,7 @@ interface NotesLayersProps {
   layers: NoteLayer[];
   setLayers: (updater: (prev: NoteLayer[]) => NoteLayer[]) => void;
   onStrokeWillBegin: () => void;
+  highlightDigit?: number;
 }
 
 interface NotesLayersState {
@@ -199,6 +200,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
           layers={layers}
           activeLayerId={activeLayerId}
           eraseMode={eraseMode}
+          highlightDigit={this.props.highlightDigit}
           onStrokeWillBegin={onStrokeWillBegin}
           onBeginStroke={this.beginStroke}
           onContinueStroke={this.continueStroke}

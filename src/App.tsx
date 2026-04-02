@@ -363,6 +363,7 @@ function App() {
             setLayers={(updater) => {
               setLayers((prev) => updater(prev));
             }}
+            highlightDigit={highlightDigit ?? undefined}
             onStrokeWillBegin={() => {
               pushHistory(cells, layers);
             }}
