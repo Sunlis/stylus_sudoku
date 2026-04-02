@@ -10,6 +10,7 @@ export interface CellProps extends CellContents {
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
+  highlightDigit?: number;
 }
 
 export class Cell extends React.Component<CellProps> {
@@ -69,6 +70,15 @@ export class Cell extends React.Component<CellProps> {
     } else {
       color = '#444';
     }
+
+    if (this.props.highlightDigit && this.props.value === this.props.highlightDigit) {
+      if (this.props.user) {
+        bg = 'rgba(252, 211, 77, 0.75)'; // warm highlight for user-filled cells
+      } else {
+        bg = 'rgba(129, 140, 248, 0.7)'; // cooler highlight for given cells
+      }
+    }
+
     if (this.props.valid === false) {
       if (this.props.user) {
         bg = 'rgba(255, 100, 100, 0.3)';

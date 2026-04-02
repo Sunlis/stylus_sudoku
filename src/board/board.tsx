@@ -2,12 +2,14 @@ import React from "react";
 
 import { CellContents } from "@app/types/board";
 import { Cell } from "@app/board/cell";
+import type { RecognitionOutcome } from "@app/handwriting";
 
 interface BoardProps {
   cells: CellContents[][];
   onChangeCell: (row: number, column: number, contents: CellContents) => void;
   eraseMode: boolean;
-  onRecognitionCandidates?: (row: number, column: number, candidates: string[]) => void;
+  onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
+  highlightDigit?: number;
 }
 
 interface BoardState {
@@ -42,6 +44,7 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       column={colIndex}
                       row={rowIndex}
                       eraseMode={this.props.eraseMode}
+                      highlightDigit={this.props.highlightDigit}
                       onRecognitionCandidates={this.props.onRecognitionCandidates}
                       setNumber={(num: number | null) => {
                         this.props.onChangeCell(rowIndex, colIndex, {

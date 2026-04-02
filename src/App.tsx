@@ -46,6 +46,7 @@ function App() {
   type HistoryEntry = { cells: CellContents[][]; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
+  const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
 
   const pushHistory = React.useCallback(
@@ -332,24 +333,30 @@ function App() {
             <Board
               cells={cells}
               eraseMode={eraseMode}
+              highlightDigit={highlightDigit ?? undefined}
               onChangeCell={handleChangeCell}
               onRecognitionCandidates={(_row, _col, outcome) => {
                 showCandidates(outcome);
               }}
             />
           </div>
-          <DigitIndicatorRow digits={Array.from({ length: 9 }, (_, i) => {
-            const digit = i + 1;
-            let count = 0;
-            cells.forEach((row) =>
-              row.forEach((cell) => {
-                if (cell.value === digit) {
-                  count += 1;
-                }
-              }),
-            );
-            return { digit, count: 9 - count };
-          })} />
+          <DigitIndicatorRow
+            digits={Array.from({ length: 9 }, (_, i) => {
+              const digit = i + 1;
+              let count = 0;
+              cells.forEach((row) =>
+                row.forEach((cell) => {
+                  if (cell.value === digit) {
+                    count += 1;
+                  }
+                }),
+              );
+              return { digit, count: 9 - count };
+            })}
+            onTapDigit={(digit) => {
+              setHighlightDigit((prev) => (prev === digit ? null : digit));
+            }}
+          />
           <NotesLayers
             eraseMode={eraseMode}
             layers={layers}
