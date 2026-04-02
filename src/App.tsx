@@ -14,6 +14,7 @@ import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
 import { RecognitionToast } from '@app/RecognitionToast';
 import { VictoryDialog } from './victory';
+import { DigitIndicatorRow } from './game/digit_indicator';
 
 function App() {
   const controlsRef = React.useRef<Controls | null>(null);
@@ -337,6 +338,18 @@ function App() {
               }}
             />
           </div>
+          <DigitIndicatorRow digits={Array.from({ length: 9 }, (_, i) => {
+            const digit = i + 1;
+            let count = 0;
+            cells.forEach((row) =>
+              row.forEach((cell) => {
+                if (cell.value === digit) {
+                  count += 1;
+                }
+              }),
+            );
+            return { digit, count: 9 - count };
+          })} />
           <NotesLayers
             eraseMode={eraseMode}
             layers={layers}
