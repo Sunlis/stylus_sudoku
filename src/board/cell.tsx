@@ -73,7 +73,7 @@ export class Cell extends React.Component<CellProps> {
 
     if (this.props.highlightDigit && this.props.value === this.props.highlightDigit) {
       if (this.props.user) {
-        bg = 'rgba(252, 211, 77, 0.75)'; // warm highlight for user-filled cells
+        bg = 'rgba(191, 77, 252, 0.75)'; // warm highlight for user-filled cells
       } else {
         bg = 'rgba(129, 140, 248, 0.7)'; // cooler highlight for given cells
       }

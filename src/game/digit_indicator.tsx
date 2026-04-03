@@ -26,7 +26,9 @@ export class DigitIndicator extends React.Component<DigitProps, {}> {
           position: 'relative',
           width: '9vw',
           height: '6vw',
-          backgroundColor: selected ? 'rgba(164, 185, 231, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          filter: selected ? 'invert(1)' : undefined,
+          border: selected ? '2px solid #000' : undefined,
         }}
         className="rounded-xl p-2 shadow-md"
         onClick={this.props.onClick}
