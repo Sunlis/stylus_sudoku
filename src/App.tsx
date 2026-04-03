@@ -300,6 +300,8 @@ function App() {
     );
 
     setHighlightDigit(null);
+
+    setHistory([]);
   };
 
   const handleResetApp = useResetApp();
