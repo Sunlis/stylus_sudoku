@@ -60,8 +60,18 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
           top: boardRect?.top ?? 0,
           width: boardRect?.width ?? 0,
           height: boardRect?.height ?? 0,
+          touchAction: 'none',
           pointerEvents: activeLayerId && boardRect ? 'auto' : 'none',
           zIndex: 1000,
+        }}
+        onPointerDown={(event) => {
+          // Prevent surrounding page text selection or scrolling while annotating.
+          event.preventDefault();
+        }}
+        onPointerMove={(event) => {
+          if (event.buttons !== 0) {
+            event.preventDefault();
+          }
         }}
       >
         {layers.map((layer) => (
