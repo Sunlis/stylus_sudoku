@@ -298,6 +298,8 @@ function App() {
         texts: layer.texts ? [] : layer.texts,
       })),
     );
+
+    setHighlightDigit(null);
   };
 
   const handleResetApp = useResetApp();
