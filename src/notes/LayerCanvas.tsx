@@ -267,6 +267,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
           top: 0,
           width: '100%',
           height: '100%',
+          pointerEvents: 'none',
         }}
       >
         <canvas
@@ -282,6 +283,8 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
             opacity: isActive ? 1 : 0.5,
             pointerEvents: isActive ? 'auto' : 'none',
           }}
+          // Re-enable pointer events on the canvas itself; the wrapper div
+          // is 'none' so that inactive-layer wrappers don't block lower layers.
           onContextMenu={(event) => {
             event.preventDefault();
           }}

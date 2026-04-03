@@ -57,7 +57,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
     activeLayerId: null,
   };
 
-  private nextIdRef = 2;
+  private nextIdRef = Math.max(1, ...this.props.layers.map((l) => l.id)) + 1;
 
   componentDidMount(): void {
     this.updateBodyForActiveLayer();
