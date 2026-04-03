@@ -10,7 +10,7 @@ const COLORS = [
 ];
 
 const STROKE_WIDTH = 2;
-const ERASER_WIDTH = 18;
+const ERASER_WIDTH = 12;
 
 interface LayerCanvasProps {
   layer: NoteLayer;
@@ -26,6 +26,7 @@ interface LayerCanvasProps {
 interface LayerCanvasState {
   isDrawing: boolean;
   isErasing: boolean;
+  eraserPosition: Point | null;
 }
 
 export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasState> {
@@ -34,6 +35,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
   state: LayerCanvasState = {
     isDrawing: false,
     isErasing: false,
+    eraserPosition: null,
   };
 
   componentDidMount(): void {
@@ -207,7 +209,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     const point = this.getRelativePoint(event);
     onStrokeWillBegin();
     onBeginStroke(point, erase);
-    this.setState({ isDrawing: true, isErasing: erase });
+    this.setState({ isDrawing: true, isErasing: erase, eraserPosition: erase ? point : null });
   };
 
   handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>): void => {
@@ -226,6 +228,9 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     event.preventDefault();
     const point = this.getRelativePoint(event);
     onContinueStroke(point, isErasing);
+    if (isErasing) {
+      this.setState({ eraserPosition: point });
+    }
   };
 
   handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>): void => {
@@ -234,7 +239,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
       return;
     }
     event.preventDefault();
-    this.setState({ isDrawing: false, isErasing: false });
+    this.setState({ isDrawing: false, isErasing: false, eraserPosition: null });
   };
 
   handlePointerLeave = (event: React.PointerEvent<HTMLCanvasElement>): void => {
@@ -243,34 +248,64 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
       return;
     }
     event.preventDefault();
-    this.setState({ isDrawing: false, isErasing: false });
+    this.setState({ isDrawing: false, isErasing: false, eraserPosition: null });
   };
 
   render(): JSX.Element {
     const { isActive } = this.props;
+    const { eraserPosition, isErasing } = this.state;
+
+    const showEraser = isActive && isErasing && eraserPosition;
+    const eraserDiameter = ERASER_WIDTH;
+    const eraserRadius = eraserDiameter / 2;
 
     return (
-      <canvas
-        ref={this.canvasRef}
+      <div
         style={{
           position: 'absolute',
           left: 0,
           top: 0,
           width: '100%',
           height: '100%',
-          backgroundColor: 'transparent',
-          touchAction: 'none',
-          opacity: isActive ? 1 : 0.5,
-          pointerEvents: isActive ? 'auto' : 'none',
         }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-        }}
-        onPointerDown={this.handlePointerDown}
-        onPointerMove={this.handlePointerMove}
-        onPointerUp={this.handlePointerUp}
-        onPointerLeave={this.handlePointerLeave}
-      />
+      >
+        <canvas
+          ref={this.canvasRef}
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'transparent',
+            touchAction: 'none',
+            opacity: isActive ? 1 : 0.5,
+            pointerEvents: isActive ? 'auto' : 'none',
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+          }}
+          onPointerDown={this.handlePointerDown}
+          onPointerMove={this.handlePointerMove}
+          onPointerUp={this.handlePointerUp}
+          onPointerLeave={this.handlePointerLeave}
+        />
+        {showEraser && (
+          <div
+            style={{
+              position: 'absolute',
+              left: eraserPosition!.x - eraserRadius,
+              top: eraserPosition!.y - eraserRadius,
+              width: eraserDiameter,
+              height: eraserDiameter,
+              borderRadius: '9999px',
+              border: '1px solid rgba(0,0,0,0.4)',
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </div>
     );
   }
 }
