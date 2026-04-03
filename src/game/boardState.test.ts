@@ -1,4 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+
+import { getSudoku } from 'sudoku-gen';
 
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { fillCandidates } from '@app/sudoku';
@@ -23,6 +25,10 @@ const makeEmptyBoard = (): CellContents[][] =>
   Array.from({ length: 9 }, () =>
     Array.from({ length: 9 }, () => ({ value: undefined } as CellContents)),
   );
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('getNewBoard', () => {
   it('creates a 9x9 board from sudoku-gen puzzle and calls fillCandidates', () => {
@@ -49,6 +55,14 @@ describe('getNewBoard', () => {
     }
 
     expect(fillCandidates).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes through higher difficulty levels supported by the fork', () => {
+    getNewBoard('evil');
+    getNewBoard('extreme');
+
+    expect(getSudoku).toHaveBeenNthCalledWith(1, 'evil');
+    expect(getSudoku).toHaveBeenNthCalledWith(2, 'extreme');
   });
 });
 

@@ -47,12 +47,12 @@ describe('UserStorage preferences', () => {
   it('persists and retrieves difficulty and recognition delay', async () => {
     const userStorage = await freshUserStorage();
 
-    userStorage.setDifficulty('hard');
+    userStorage.setDifficulty('extreme');
     userStorage.setRecognitionDelay(2000);
 
     const secondInstance = await freshUserStorage();
 
-    expect(secondInstance.getDifficulty()).toBe('hard');
+    expect(secondInstance.getDifficulty()).toBe('extreme');
     expect(secondInstance.getRecognitionDelay()).toBe(2000);
   });
 

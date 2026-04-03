@@ -5,7 +5,7 @@ import eraserIcon from '../static/eraser.svg';
 import gridIcon from '../static/grid.svg';
 import undoIcon from '../static/undo.svg';
 import overflowIcon from '../static/overflow.svg';
-import { Difficulty } from './types';
+import { DIFFICULTIES, DIFFICULTY_LABELS, Difficulty } from './types';
 import { userStorage } from './storage';
 import { DANGER_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
 
@@ -131,10 +131,11 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               this.setState({ difficulty: newDifficulty });
               userStorage.setDifficulty(newDifficulty);
             }} className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-slate-400/70">
-              <option value='easy'>Easy</option>
-              <option value='medium'>Medium</option>
-              <option value='hard'>Hard</option>
-              <option value='expert'>Expert</option>
+              {DIFFICULTIES.map((difficulty) => (
+                <option key={difficulty} value={difficulty}>
+                  {DIFFICULTY_LABELS[difficulty]}
+                </option>
+              ))}
             </select>
             <Button
               className={PRIMARY_BUTTON}
