@@ -13,6 +13,7 @@ import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
 import { RecognitionToast } from '@app/RecognitionToast';
+import { HintPanel } from '@app/HintPanel';
 import { VictoryDialog } from './victory';
 import { DigitIndicatorRow } from './game/digit_indicator';
 
@@ -372,6 +373,7 @@ function App() {
               pushHistory(cells, layers);
             }}
           />
+          <HintPanel cells={cells} />
           <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
             <BoardExport cells={cells} />
           </div>

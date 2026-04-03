@@ -62,3 +62,19 @@ body.notes-mode::before {
     font-size: 2.0rem;
   }
 }
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    display: inline-block;
+  }
+
+  to {
+    opacity: 0;
+    display: none;
+  }
+}
+
+.fade-out {
+  animation: fadeOut 5s ease-in-out 1s forwards;
+}
