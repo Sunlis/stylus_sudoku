@@ -8,7 +8,7 @@ import { Difficulty } from '@app/types';
 import { userStorage } from '@app/storage';
 import { fillCandidates, isBoardValid } from '@app/sudoku';
 import { createBoard, type Board as SudokuBoard, type Cell as SudokuCell } from '@app/types/board';
-import { NoteLayer, NoteText } from '@app/types/notes';
+import { NoteLayer } from '@app/types/notes';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
@@ -32,21 +32,13 @@ function App() {
     if (stored && Array.isArray(stored)) {
       return stored.map((layer) => ({ ...layer }));
     }
-    return [
-      {
-        id: 1,
-        name: 'Candidates',
-        colorIndex: 0,
-        visible: true,
-        strokes: [],
-        texts: [],
-      },
-    ];
+    return [];
   });
 
   type HistoryEntry = { cells: SudokuBoard; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
+  const [candidateMode, setCandidateMode] = React.useState(false);
   const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
 
@@ -76,189 +68,44 @@ function App() {
     document.title = 'Stylus Sudoku';
   }, []);
 
-  const clearCandidatesRegion = (row: number, col: number) => {
-    const boardEl = document.getElementById('sudoku-board-root');
-    if (!boardEl) {
-      return;
-    }
-    const rect = boardEl.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-      return;
-    }
-
-    const cellWidth = rect.width / 9;
-    const cellHeight = rect.height / 9;
-
-    const minX = col * cellWidth;
-    const maxX = (col + 1) * cellWidth;
-    const minY = row * cellHeight;
-    const maxY = (row + 1) * cellHeight;
-
-    setLayers((prevLayers) =>
-      prevLayers.map((layer) => {
-        if (layer.name !== 'Candidates') {
-          return layer;
-        }
-        const filteredStrokes = layer.strokes.filter((stroke) => {
-          return !stroke.points.some((point) => {
-            return (
-              point.x >= minX &&
-              point.x <= maxX &&
-              point.y >= minY &&
-              point.y <= maxY
-            );
-          });
-        });
-        const filteredTexts = layer.texts
-          ? layer.texts.filter((t) => {
-            return !(
-              t.x >= minX &&
-              t.x <= maxX &&
-              t.y >= minY &&
-              t.y <= maxY
-            );
-          })
-          : layer.texts;
-
-        if (filteredStrokes === layer.strokes && filteredTexts === layer.texts) {
-          return layer;
-        }
-        return {
-          ...layer,
-          strokes: filteredStrokes,
-          texts: filteredTexts,
-        };
-      }),
-    );
-  };
-
-  const clearCandidateDigitFromPeers = (row: number, col: number, digit: number) => {
-    if (digit < 1 || digit > 9) {
-      return;
-    }
-
-    const boardEl = document.getElementById('sudoku-board-root');
-    if (!boardEl) {
-      return;
-    }
-    const rect = boardEl.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-      return;
-    }
-
-    const cellWidth = rect.width / 9;
-    const cellHeight = rect.height / 9;
-
-    setLayers((prevLayers) =>
-      prevLayers.map((layer) => {
-        if (layer.name !== 'Candidates' || !layer.texts) {
-          return layer;
-        }
-
-        const filteredTexts = layer.texts.filter((t) => {
-          const cellRow = Math.floor(t.y / cellHeight);
-          const cellCol = Math.floor(t.x / cellWidth);
-
-          const sameRow = cellRow === row;
-          const sameCol = cellCol === col;
-          const sameBox =
-            Math.floor(cellRow / 3) === Math.floor(row / 3) &&
-            Math.floor(cellCol / 3) === Math.floor(col / 3);
-
-          const isPeer = sameRow || sameCol || sameBox;
-
-          if (isPeer && t.text === String(digit)) {
-            return false;
-          }
-          return true;
-        });
-
-        if (filteredTexts === layer.texts) {
-          return layer;
-        }
-
-        return {
-          ...layer,
-          texts: filteredTexts,
-        };
-      }),
-    );
+  const handleToggleCandidate = (row: number, col: number, num: number) => {
+    const cell = cells[row][col];
+    const prev = cell.candidates ?? [];
+    const next = prev.includes(num)
+      ? prev.filter((c) => c !== num)
+      : [...prev, num].sort((a, b) => a - b);
+    const nextCells = createBoard((r, c) => {
+      if (r === row && c === col) {
+        return { ...cell, candidates: next };
+      }
+      return cells[r][c];
+    });
+    pushHistory(cells, layers);
+    setCells(nextCells);
   };
 
   const handleDrawCandidates = () => {
-    const boardForCandidates = fillCandidates(
+    pushHistory(cells, layers);
+    const filled = fillCandidates(
+      createBoard((row, col) => ({ ...cells[row][col], candidates: undefined })),
+    );
+    setCells(
       createBoard((row, col) => ({
         ...cells[row][col],
-        candidates: undefined,
+        candidates: filled[row][col].candidates,
       })),
-    );
-
-    const boardEl = document.getElementById('sudoku-board-root');
-    if (!boardEl) {
-      return;
-    }
-    const rect = boardEl.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-      return;
-    }
-
-    const cellWidth = rect.width / 9;
-    const cellHeight = rect.height / 9;
-    const slotWidth = cellWidth / 3;
-    const slotHeight = cellHeight / 3;
-
-    const texts: NoteText[] = [];
-
-    for (let row = 0; row < 9; row += 1) {
-      for (let col = 0; col < 9; col += 1) {
-        const cell = boardForCandidates[row]?.[col];
-        if (!cell || !cell.candidates || cell.candidates.length === 0) {
-          continue;
-        }
-
-        for (const cand of cell.candidates) {
-          const idx = cand - 1;
-          if (idx < 0 || idx > 8) {
-            continue;
-          }
-          const gridX = idx % 3;
-          const gridY = Math.floor(idx / 3);
-
-          const baseX = col * cellWidth;
-          const baseY = row * cellHeight;
-          const x = baseX + (gridX + 0.5) * slotWidth;
-          const y = baseY + (gridY + 0.5) * slotHeight;
-
-          texts.push({ x, y, text: String(cand) });
-        }
-      }
-    }
-
-    if (texts.length === 0) {
-      return;
-    }
-
-    pushHistory(cells, layers);
-
-    setLayers((prevLayers) =>
-      prevLayers.map((layer) => {
-        if (layer.name !== 'Candidates') {
-          return layer;
-        }
-        return {
-          ...layer,
-          strokes: [],
-          texts,
-        };
-      }),
     );
   };
 
   const handleChangeCell = (nextCell: SudokuCell) => {
     const { row, col } = nextCell;
+    const cellToStore =
+      nextCell.user && nextCell.value !== undefined
+        ? { ...nextCell, candidates: undefined }
+        : nextCell;
     const nextCells = createBoard((nextRow, nextCol) => {
       if (nextRow === row && nextCol === col) {
-        return nextCell;
+        return cellToStore;
       }
       return cells[nextRow][nextCol];
     });
@@ -272,11 +119,6 @@ function App() {
     );
     if (allFilled && isBoardValid(validated)) {
       victoryRef.current?.show();
-    }
-
-    if (nextCell.user && nextCell.value !== undefined) {
-      clearCandidatesRegion(row, col);
-      clearCandidateDigitFromPeers(row, col, nextCell.value);
     }
   };
 
@@ -312,6 +154,8 @@ function App() {
             onToggleEraseMode={() => {
               setEraseMode((prev) => !prev);
             }}
+            candidateMode={candidateMode}
+            onToggleCandidateMode={() => setCandidateMode((prev) => !prev)}
             onDrawCandidates={handleDrawCandidates}
             onResetApp={handleResetApp}
             onUndo={() => {
@@ -334,6 +178,8 @@ function App() {
               eraseMode={eraseMode}
               highlightDigit={highlightDigit ?? undefined}
               onChangeCell={handleChangeCell}
+              candidateMode={candidateMode}
+              onToggleCandidate={handleToggleCandidate}
               onRecognitionCandidates={(_row, _col, outcome) => {
                 showCandidates(outcome);
               }}

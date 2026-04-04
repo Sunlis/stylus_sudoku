@@ -8,8 +8,55 @@ export interface CellProps extends SudokuCell {
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
+  candidateMode?: boolean;
+  onToggleCandidate?: (num: number) => void;
   highlightDigit?: number;
 }
+
+const CANDIDATE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+
+const CandidateGrid: React.FC<{
+  candidates: number[] | undefined;
+  interactive: boolean;
+  highlightDigit?: number;
+  onToggle?: (num: number) => void;
+}> = ({ candidates, interactive, highlightDigit, onToggle }) => (
+  <div
+    style={{
+      position: 'absolute',
+      inset: 0,
+      display: 'grid',
+      gridTemplateColumns: 'repeat(3, 1fr)',
+      gridTemplateRows: 'repeat(3, 1fr)',
+      pointerEvents: interactive ? 'auto' : 'none',
+    }}
+  >
+    {CANDIDATE_NUMBERS.map((num) => {
+      const isSet = candidates?.includes(num) ?? false;
+      const isHighlighted = isSet && highlightDigit === num;
+      return (
+        <div
+          key={num}
+          onPointerDown={interactive ? (e) => { e.preventDefault(); e.stopPropagation(); onToggle?.(num); } : undefined}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 'clamp(0.55rem, 2.8vw, 0.85rem)',
+            lineHeight: 1,
+            color: isSet ? (isHighlighted ? '#fff' : '#334155') : 'transparent',
+            backgroundColor: isHighlighted ? 'rgba(191, 77, 252, 0.75)' : 'transparent',
+            borderRadius: '6px',
+            cursor: interactive ? 'pointer' : 'default',
+            userSelect: 'none',
+          }}
+        >
+          {num}
+        </div>
+      );
+    })}
+  </div>
+);
 
 export class Cell extends React.Component<CellProps> {
   render() {
@@ -24,28 +71,49 @@ export class Cell extends React.Component<CellProps> {
       }}>{this.props.value}</div>;
     }
     if (this.props.user) {
-      interior = <div style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-      }}>
-        <InputPanel
-          anchor={{ x: 0, y: 0 }}
-          canvasSize={100}
-          eraseMode={this.props.eraseMode}
-          storageKey={`${this.props.row},${this.props.col}`}
-          onNumberRecognized={(num) => {
-            this.props.setNumber?.(num);
-          }}
-          onClearCell={() => {
-            this.props.setNumber?.(null);
-          }}
-          onCandidatesRecognized={(outcome) => {
-            this.props.onRecognitionCandidates?.(this.props.row, this.props.col, outcome);
-          }}
-        />
-        {interior}
-      </div>;
+      const showCandidateGrid = this.props.value === undefined;
+      if (this.props.candidateMode && showCandidateGrid) {
+        interior = (
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <CandidateGrid
+              candidates={this.props.candidates}
+              interactive={true}
+              highlightDigit={this.props.highlightDigit}
+              onToggle={this.props.onToggleCandidate}
+            />
+          </div>
+        );
+      } else {
+        interior = <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+        }}>
+          <InputPanel
+            anchor={{ x: 0, y: 0 }}
+            canvasSize={100}
+            eraseMode={this.props.eraseMode}
+            storageKey={`${this.props.row},${this.props.col}`}
+            onNumberRecognized={(num) => {
+              this.props.setNumber?.(num);
+            }}
+            onClearCell={() => {
+              this.props.setNumber?.(null);
+            }}
+            onCandidatesRecognized={(outcome) => {
+              this.props.onRecognitionCandidates?.(this.props.row, this.props.col, outcome);
+            }}
+          />
+          {interior}
+          {showCandidateGrid && (
+            <CandidateGrid
+              candidates={this.props.candidates}
+              interactive={false}
+              highlightDigit={this.props.highlightDigit}
+            />
+          )}
+        </div>;
+      }
     }
     let color = '#000000';
     let bg = 'unset';

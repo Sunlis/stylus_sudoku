@@ -8,6 +8,8 @@ interface BoardProps {
   cells: SudokuBoard;
   onChangeCell: (cell: SudokuCell) => void;
   eraseMode: boolean;
+  candidateMode?: boolean;
+  onToggleCandidate?: (row: number, col: number, num: number) => void;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
   highlightDigit?: number;
 }
@@ -43,6 +45,10 @@ export class Board extends React.Component<BoardProps, BoardState> {
                       key={`${rowIndex}-${colIndex}`}
                       eraseMode={this.props.eraseMode}
                       highlightDigit={this.props.highlightDigit}
+                      candidateMode={this.props.candidateMode}
+                      onToggleCandidate={(num) => {
+                        this.props.onToggleCandidate?.(cell.row, cell.col, num);
+                      }}
                       onRecognitionCandidates={this.props.onRecognitionCandidates}
                       setNumber={(num: number | null) => {
                         this.props.onChangeCell({

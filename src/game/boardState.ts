@@ -2,12 +2,12 @@ import { getSudoku } from 'sudoku-gen';
 
 import { Difficulty } from '@app/types';
 import { Board, createBoard } from '@app/types/board';
-import { fillCandidates, isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
+import { isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
 
 export const getNewBoard = (d: Difficulty): Board => {
   const { puzzle } = getSudoku(d);
 
-  return fillCandidates(createBoard((row, col) => {
+  return createBoard((row, col) => {
     const index = (row * 9) + col;
     let value: number | undefined = parseInt(puzzle[index]);
     value = isNaN(value) ? undefined : value;
@@ -16,7 +16,7 @@ export const getNewBoard = (d: Difficulty): Board => {
       value: value,
       user: !value,
     };
-  }));
+  });
 };
 
 const isCellPositionValid = (board: Board, row: number, col: number): boolean => {
