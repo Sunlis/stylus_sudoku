@@ -239,8 +239,8 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
               iconOff={<PencilIcon />}
               ariaLabel={eraseMode ? 'Switch to draw mode' : 'Switch to erase mode'}
               title={eraseMode ? 'Eraser on — click to draw' : 'Draw mode — click to erase'}
-              trackColorOff='#208757'
-              trackColorOn='#882434'
+              trackColorOff='#18dd81'
+              trackColorOn='#e6183a'
               thumbColorOff='#cfe7d7'
               thumbColorOn='#e1cbcf'
               thumbIconColorOn='#000000'
