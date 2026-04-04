@@ -1,12 +1,10 @@
 import React from "react";
 
 import { InputPanel } from "@app/input_panel";
-import { CellContents } from "@app/types/board";
+import type { Cell as SudokuCell } from "@app/types/board";
 import type { RecognitionOutcome } from "@app/handwriting";
 
-export interface CellProps extends CellContents {
-  column: number;
-  row: number;
+export interface CellProps extends SudokuCell {
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
@@ -35,7 +33,7 @@ export class Cell extends React.Component<CellProps> {
           anchor={{ x: 0, y: 0 }}
           canvasSize={100}
           eraseMode={this.props.eraseMode}
-          storageKey={`${this.props.row},${this.props.column}`}
+          storageKey={`${this.props.row},${this.props.col}`}
           onNumberRecognized={(num) => {
             this.props.setNumber?.(num);
           }}
@@ -43,7 +41,7 @@ export class Cell extends React.Component<CellProps> {
             this.props.setNumber?.(null);
           }}
           onCandidatesRecognized={(outcome) => {
-            this.props.onRecognitionCandidates?.(this.props.row, this.props.column, outcome);
+            this.props.onRecognitionCandidates?.(this.props.row, this.props.col, outcome);
           }}
         />
         {interior}
@@ -54,7 +52,7 @@ export class Cell extends React.Component<CellProps> {
     let fontSize = '1rem';
     let borderLeft = 1;
     let borderTop = 1;
-    if (this.props.column % 3 === 0) {
+    if (this.props.col % 3 === 0) {
       borderLeft = 2;
     }
     if (this.props.row % 3 === 0) {

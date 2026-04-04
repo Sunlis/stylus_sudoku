@@ -7,7 +7,7 @@ import { NotesLayers } from '@app/notes/NotesLayers';
 import { Difficulty } from '@app/types';
 import { userStorage } from '@app/storage';
 import { fillCandidates, isBoardValid } from '@app/sudoku';
-import { CellContents } from '@app/types/board';
+import { createBoard, type Board as SudokuBoard, type Cell as SudokuCell } from '@app/types/board';
 import { NoteLayer, NoteText } from '@app/types/notes';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
@@ -20,7 +20,7 @@ import { DigitIndicatorRow } from './game/digit_indicator';
 function App() {
   const controlsRef = React.useRef<Controls | null>(null);
   const victoryRef = React.useRef<VictoryDialog | null>(null);
-  const [cells, setCells] = React.useState<CellContents[][]>(() => {
+  const [cells, setCells] = React.useState<SudokuBoard>(() => {
     const stored = userStorage.getBoardState();
     if (stored) {
       return recomputeValidity(stored);
@@ -44,14 +44,14 @@ function App() {
     ];
   });
 
-  type HistoryEntry = { cells: CellContents[][]; layers: NoteLayer[]; };
+  type HistoryEntry = { cells: SudokuBoard; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
   const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
 
   const pushHistory = React.useCallback(
-    (snapshotCells: CellContents[][], snapshotLayers: NoteLayer[]) => {
+    (snapshotCells: SudokuBoard, snapshotLayers: NoteLayer[]) => {
       const MAX_HISTORY = 100;
       setHistory((prev) => {
         const updated = [...prev, { cells: snapshotCells, layers: snapshotLayers }];
@@ -187,12 +187,10 @@ function App() {
 
   const handleDrawCandidates = () => {
     const boardForCandidates = fillCandidates(
-      cells.map((row) =>
-        row.map((cell) => ({
-          ...cell,
-          candidates: undefined,
-        })),
-      ),
+      createBoard((row, col) => ({
+        ...cells[row][col],
+        candidates: undefined,
+      })),
     );
 
     const boardEl = document.getElementById('sudoku-board-root');
@@ -256,17 +254,13 @@ function App() {
     );
   };
 
-  const handleChangeCell = (row: number, col: number, contents: CellContents) => {
-    const nextCells = cells.map((rowArr, rIndex) => {
-      if (rIndex !== row) {
-        return rowArr;
+  const handleChangeCell = (nextCell: SudokuCell) => {
+    const { row, col } = nextCell;
+    const nextCells = createBoard((nextRow, nextCol) => {
+      if (nextRow === row && nextCol === col) {
+        return nextCell;
       }
-      return rowArr.map((cell, cIndex) => {
-        if (cIndex !== col) {
-          return cell;
-        }
-        return contents;
-      });
+      return cells[nextRow][nextCol];
     });
 
     pushHistory(cells, layers);
@@ -280,9 +274,9 @@ function App() {
       victoryRef.current?.show();
     }
 
-    if (contents.user && contents.value !== undefined) {
+    if (nextCell.user && nextCell.value !== undefined) {
       clearCandidatesRegion(row, col);
-      clearCandidateDigitFromPeers(row, col, contents.value);
+      clearCandidateDigitFromPeers(row, col, nextCell.value);
     }
   };
 

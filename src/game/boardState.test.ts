@@ -4,7 +4,7 @@ import { getSudoku } from 'sudoku-gen';
 
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { fillCandidates } from '@app/sudoku';
-import type { CellContents } from '@app/types/board';
+import { createBoard, type Board } from '@app/types/board';
 
 vi.mock('sudoku-gen', () => ({
   getSudoku: vi.fn(() => ({
@@ -21,10 +21,7 @@ vi.mock('@app/sudoku', async (orig) => {
   };
 });
 
-const makeEmptyBoard = (): CellContents[][] =>
-  Array.from({ length: 9 }, () =>
-    Array.from({ length: 9 }, () => ({ value: undefined } as CellContents)),
-  );
+const makeEmptyBoard = (): Board => createBoard(() => ({ value: undefined }));
 
 beforeEach(() => {
   vi.clearAllMocks();

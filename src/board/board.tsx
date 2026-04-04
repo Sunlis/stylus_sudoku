@@ -1,12 +1,12 @@
 import React from "react";
 
-import { CellContents } from "@app/types/board";
+import type { Board as SudokuBoard, Cell as SudokuCell, Group } from "@app/types/board";
 import { Cell } from "@app/board/cell";
 import type { RecognitionOutcome } from "@app/handwriting";
 
 interface BoardProps {
-  cells: CellContents[][];
-  onChangeCell: (row: number, column: number, contents: CellContents) => void;
+  cells: SudokuBoard;
+  onChangeCell: (cell: SudokuCell) => void;
   eraseMode: boolean;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
   highlightDigit?: number;
@@ -35,25 +35,23 @@ export class Board extends React.Component<BoardProps, BoardState> {
           }}
         >
           {
-            Array.from({ length: 9 }, (_, rowIndex) => {
+            this.props.cells.map((group: Group, rowIndex) => {
               return (<div key={rowIndex} className="flex flex-row">
                 {
-                  Array.from({ length: 9 }, (_, colIndex) => {
+                  group.map((cell: SudokuCell, colIndex) => {
                     return <Cell
-                      key={colIndex}
-                      column={colIndex}
-                      row={rowIndex}
+                      key={`${rowIndex}-${colIndex}`}
                       eraseMode={this.props.eraseMode}
                       highlightDigit={this.props.highlightDigit}
                       onRecognitionCandidates={this.props.onRecognitionCandidates}
                       setNumber={(num: number | null) => {
-                        this.props.onChangeCell(rowIndex, colIndex, {
-                          ...this.props.cells[rowIndex][colIndex],
+                        this.props.onChangeCell({
+                          ...cell,
                           value: num ?? undefined,
                           user: true,
                         });
                       }}
-                      {...(this.props.cells?.[rowIndex]?.[colIndex])} />;
+                      {...cell} />;
                   })
                 }
               </div>

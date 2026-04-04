@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { CellContents } from '@app/types/board';
+import { createBoard, type Board } from '@app/types/board';
 import type { Trace } from '@app/handwriting';
 
 const createMockLocalStorage = () => {
@@ -71,12 +71,15 @@ describe('UserStorage board state', () => {
   it('persists and retrieves board state', async () => {
     const userStorage = await freshUserStorage();
 
-    const board: CellContents[][] = [
-      [
-        { value: 1 } as CellContents,
-        { value: 2 } as CellContents,
-      ],
-    ] as unknown as CellContents[][];
+    const board: Board = createBoard((row, col) => {
+      if (row === 0 && col === 0) {
+        return { value: 1 };
+      }
+      if (row === 0 && col === 1) {
+        return { value: 2 };
+      }
+      return { value: undefined };
+    });
 
     userStorage.setBoardState(board);
 

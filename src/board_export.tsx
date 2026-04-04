@@ -1,10 +1,10 @@
 import React from 'react';
 import copyIcon from '../static/copy.svg';
 
-import { CellContents } from '@app/types/board';
+import type { Board } from '@app/types/board';
 
 interface ExportProps {
-  cells: CellContents[][];
+  cells: Board;
 }
 
 export class BoardExport extends React.Component<ExportProps> {

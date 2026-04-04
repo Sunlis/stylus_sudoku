@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
 import { boxIndex, clearRelatedCandidates, fillCandidates, forEachCell, forEachGroup, isBoardValid, isBoxValid, isColumnValid, isRowValid } from '@app/sudoku';
-import type { CellContents } from '@app/types/board';
+import { createBoard, type Board, type CellContents } from '@app/types/board';
 
 function emptyCell(): CellContents {
   return { value: undefined } as CellContents;
 }
 
-function boardFromValues(values: (number | undefined)[][]): CellContents[][] {
-  return values.map(row => row.map(value => ({ value } as CellContents)));
+function boardFromValues(values: (number | undefined)[][]): Board {
+  return createBoard((row, col) => ({ value: values[row]?.[col] }));
 }
 
 describe('boxIndex', () => {
@@ -173,9 +173,7 @@ describe('isBoardValid', () => {
 
 describe('forEachCell', () => {
   it('visits all 81 cells in row-major order', () => {
-    const board: CellContents[][] = Array.from({ length: 9 }, () =>
-      Array.from({ length: 9 }, () => emptyCell()),
-    );
+    const board: Board = createBoard(() => emptyCell());
 
     const visited: [number, number][] = [];
     forEachCell(board, (_cell, row, col) => {
@@ -247,9 +245,7 @@ describe('fillCandidates and clearRelatedCandidates', () => {
   });
 
   it('clearRelatedCandidates does nothing if the referenced cell has no value', () => {
-    const board: CellContents[][] = Array.from({ length: 9 }, () =>
-      Array.from({ length: 9 }, () => ({ value: undefined, candidates: [1, 2, 3] } as CellContents)),
-    );
+    const board: Board = createBoard(() => ({ value: undefined, candidates: [1, 2, 3] }));
 
     const result = clearRelatedCandidates(board, 0, 0);
 

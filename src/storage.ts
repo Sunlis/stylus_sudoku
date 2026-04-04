@@ -1,11 +1,11 @@
 import { Difficulty } from "./types";
-import type { CellContents } from "@app/types/board";
+import type { Board } from "@app/types/board";
 import type { Trace } from "./handwriting";
 
 interface UserPreferences {
   difficulty: Difficulty;
   recognitionDelay: number;
-  boardState?: CellContents[][];
+  boardState?: Board;
   notesLayers?: unknown;
   handwritingStrokes?: Record<string, Trace>;
 }
@@ -60,11 +60,11 @@ class UserStorage {
     this.setPreferences();
   }
 
-  getBoardState(): CellContents[][] | null {
+  getBoardState(): Board | null {
     return this.preferences.boardState ?? null;
   }
 
-  setBoardState(cells: CellContents[][]): void {
+  setBoardState(cells: Board): void {
     this.preferences.boardState = cells;
     this.setPreferences();
   }

@@ -1,31 +1,25 @@
 import { getSudoku } from 'sudoku-gen';
 
 import { Difficulty } from '@app/types';
-import { CellContents } from '@app/types/board';
+import { Board, createBoard } from '@app/types/board';
 import { fillCandidates, isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
 
-export const getNewBoard = (d: Difficulty): CellContents[][] => {
-  const out: CellContents[][] = [];
+export const getNewBoard = (d: Difficulty): Board => {
   const { puzzle } = getSudoku(d);
 
-  for (let i = 0; i < 81; i++) {
-    const row = Math.floor(i / 9);
-    const col = i % 9;
-    let value: number | undefined = parseInt(puzzle[i]);
+  return fillCandidates(createBoard((row, col) => {
+    const index = (row * 9) + col;
+    let value: number | undefined = parseInt(puzzle[index]);
     value = isNaN(value) ? undefined : value;
-    if (!out[row]) {
-      out[row] = [];
-    }
-    out[row][col] = {
+
+    return {
       value: value,
       user: !value,
     };
-  }
-
-  return fillCandidates(out);
+  }));
 };
 
-const isCellPositionValid = (board: CellContents[][], row: number, col: number): boolean => {
+const isCellPositionValid = (board: Board, row: number, col: number): boolean => {
   const boxRow = Math.floor(row / 3);
   const boxCol = Math.floor(col / 3);
 
@@ -42,15 +36,13 @@ const isCellPositionValid = (board: CellContents[][], row: number, col: number):
   return true;
 };
 
-export const recomputeValidity = (board: CellContents[][]): CellContents[][] => {
+export const recomputeValidity = (board: Board): Board => {
   // Mark any cell whose row, column, or box contains a duplicate as invalid.
-  return board.map((rowArr, row) =>
-    rowArr.map((cell, col) => {
-      const isValid = isCellPositionValid(board, row, col);
-      return {
-        ...cell,
-        valid: isValid ? undefined : false,
-      };
-    }),
-  );
+  return createBoard((row, col) => {
+    const isValid = isCellPositionValid(board, row, col);
+    return {
+      ...board[row][col],
+      valid: isValid ? undefined : false,
+    };
+  });
 };

@@ -1,15 +1,24 @@
-import { CellContents } from "@app/types/board";
+import { Board, Cell, Group } from "@app/types/board";
+
+export enum GroupType {
+  ROW,
+  COLUMN,
+  BOX
+}
 
 /**
  * Run the callback for each "group" in the board (row, column, or box).
  * If the callback returns true, iteration will stop early.
  */
-export function forEachGroup(board: CellContents[][], callback: (group: CellContents[]) => boolean | void): void {
+export function forEachGroup<T>(
+  board: Board,
+  callback: (group: Group, type: GroupType, index: number) => T | void): T | void {
   // Rows
   for (let row = 0; row < 9; row++) {
     const rowGroup = board[row];
-    if (callback(rowGroup)) {
-      return;
+    const result = callback(rowGroup, GroupType.ROW, row);
+    if (result !== undefined) {
+      return result;
     }
   }
 
@@ -19,8 +28,9 @@ export function forEachGroup(board: CellContents[][], callback: (group: CellCont
     for (let row = 0; row < 9; row++) {
       colGroup.push(board[row][col]);
     }
-    if (callback(colGroup)) {
-      return;
+    const result = callback(colGroup, GroupType.COLUMN, col);
+    if (result !== undefined) {
+      return result;
     }
   }
 
@@ -33,17 +43,23 @@ export function forEachGroup(board: CellContents[][], callback: (group: CellCont
           boxGroup.push(board[row][col]);
         }
       }
-      if (callback(boxGroup)) {
-        return;
+      const result = callback(boxGroup, GroupType.BOX, boxRow * 3 + boxCol);
+      if (result !== undefined) {
+        return result;
       }
     }
   }
 }
 
-export function forEachCell(board: CellContents[][], callback: (cell: CellContents, row: number, col: number) => void): void {
+export function forEachCell<T>(
+  board: Board,
+  callback: (cell: Cell, row: number, col: number, index: number) => T | void): T | void {
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
-      callback(board[row][col], row, col);
+      const result = callback(board[row][col], row, col, (row * 9) + col);
+      if (result !== undefined) {
+        return result;
+      }
     }
   }
 }
@@ -54,7 +70,7 @@ export function boxIndex(row: number, col: number): number {
   return boxRow * 3 + boxCol;
 }
 
-export function isBoardValid(board: CellContents[][]): boolean {
+export function isBoardValid(board: Board): boolean {
   let valid = true;
   forEachGroup(board, (group) => {
     const seen = new Set<number>();
@@ -71,7 +87,7 @@ export function isBoardValid(board: CellContents[][]): boolean {
   return valid;
 }
 
-export function isRowValid(board: CellContents[][], row: number): boolean {
+export function isRowValid(board: Board, row: number): boolean {
   const seen = new Set<number>();
   for (let col = 0; col < 9; col++) {
     const value = board[row][col].value;
@@ -85,7 +101,7 @@ export function isRowValid(board: CellContents[][], row: number): boolean {
   return true;
 }
 
-export function isColumnValid(board: CellContents[][], col: number): boolean {
+export function isColumnValid(board: Board, col: number): boolean {
   const seen = new Set<number>();
   for (let row = 0; row < 9; row++) {
     const value = board[row][col].value;
@@ -99,7 +115,7 @@ export function isColumnValid(board: CellContents[][], col: number): boolean {
   return true;
 }
 
-export function isBoxValid(board: CellContents[][], boxRow: number, boxCol: number): boolean {
+export function isBoxValid(board: Board, boxRow: number, boxCol: number): boolean {
   const seen = new Set<number>();
   for (let row = boxRow * 3; row < boxRow * 3 + 3; row++) {
     for (let col = boxCol * 3; col < boxCol * 3 + 3; col++) {
@@ -116,7 +132,7 @@ export function isBoxValid(board: CellContents[][], boxRow: number, boxCol: numb
 }
 
 // Just naively fill all empty cells with all 9 numbers.
-function fillAllCandidates(board: CellContents[][]): CellContents[][] {
+function fillAllCandidates(board: Board): Board {
   forEachCell(board, (cell, row, col) => {
     if (cell.value === undefined) {
       cell.candidates = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -126,7 +142,7 @@ function fillAllCandidates(board: CellContents[][]): CellContents[][] {
 }
 
 // Clear the given cell's number from all relevant candidates.
-export function clearRelatedCandidates(board: CellContents[][], cellRow: number, cellCol: number): CellContents[][] {
+export function clearRelatedCandidates(board: Board, cellRow: number, cellCol: number): Board {
   const value = board[cellRow][cellCol].value;
   if (value === undefined) {
     return board;
@@ -144,8 +160,8 @@ export function clearRelatedCandidates(board: CellContents[][], cellRow: number,
   return board;
 }
 
-export function fillCandidates(board: CellContents[][]): CellContents[][] {
-  const newBoard: CellContents[][] = fillAllCandidates(board);
+export function fillCandidates(board: Board): Board {
+  const newBoard: Board = fillAllCandidates(board);
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       if (newBoard[row][col].value !== undefined) {

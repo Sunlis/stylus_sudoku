@@ -1,13 +1,13 @@
 import React from 'react';
 import { Button } from '@heroui/react';
 
-import { getHintDescription, getSudokuCoreHint } from '@app/hints';
 import { PRIMARY_BUTTON } from '@app/style';
-import type { CellContents } from '@app/types/board';
+import type { Board } from '@app/types/board';
 import questionIcon from '../static/question.svg';
+import { getHint } from './hints';
 
 interface HintPanelProps {
-  cells: CellContents[][];
+  cells: Board;
 }
 
 interface HintPanelState {
@@ -29,14 +29,8 @@ export class HintPanel extends React.Component<HintPanelProps, HintPanelState> {
       clearTimeout(this.hintFadeTimeout);
     }
     this.setState({ hintResult: null }, () => {
-      try {
-        const result = getSudokuCoreHint(this.props.cells);
-        const description = getHintDescription(result);
-        this.setState({ hintResult: description });
-      } catch (error) {
-        console.error('sudoku-core hint failed', error);
-        this.setState({ hintResult: 'Failed to get hint' });
-      }
+      const { strategy, description, cells } = getHint(this.props.cells);
+      this.setState({ hintResult: description });
       this.hintFadeTimeout = setTimeout(() => {
         this.setState({ hintResult: null });
       }, 6000);
