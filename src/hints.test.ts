@@ -119,6 +119,130 @@ describe('HIDDEN_PAIR', () => {
   });
 });
 
+describe('NAKED_TRIPLE', () => {
+  const check = STRATEGY_CHECKS[MoveStrategy.NAKED_TRIPLE];
+
+  it('finds a naked triple when eliminations exist', () => {
+    // (0,0){1,2}, (0,1){2,3}, (0,2){1,3} — union is {1,2,3}
+    // (0,3){1,4} can have candidate 1 eliminated
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 1, candidates: [2, 3] },
+      { row: 0, col: 2, candidates: [1, 3] },
+      { row: 0, col: 3, candidates: [1, 4] },
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    const positions = result!.cells.map((c) => `${c.row},${c.col}`).sort();
+    expect(positions).toEqual(['0,0', '0,1', '0,2']);
+  });
+
+  it('does not trigger when no eliminations are possible', () => {
+    // Triple exists but no other unsolved cell in the group holds any of the three candidates
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 1, candidates: [2, 3] },
+      { row: 0, col: 2, candidates: [1, 3] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+
+  it('does not trigger when the union spans more than three digits', () => {
+    // Each pair of cells covers completely different candidates – no triple can have union ≤ 3
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 1, candidates: [3, 4] },
+      { row: 0, col: 2, candidates: [5, 6] },
+      { row: 0, col: 3, candidates: [7, 8] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+});
+
+describe('HIDDEN_TRIPLE', () => {
+  const check = STRATEGY_CHECKS[MoveStrategy.HIDDEN_TRIPLE];
+
+  it('finds a hidden triple when the three candidates are confined to three cells', () => {
+    // Candidates 6, 7, 8 appear only in (0,0), (0,1), (0,2); each cell has one extra candidate
+    // Extra candidates (1,2,3) each appear in only one cell so they don't form accidental triples
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 6, 7] },
+      { row: 0, col: 1, candidates: [2, 6, 8] },
+      { row: 0, col: 2, candidates: [3, 7, 8] },
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    const positions = result!.cells.map((c) => `${c.row},${c.col}`).sort();
+    expect(positions).toEqual(['0,0', '0,1', '0,2']);
+  });
+
+  it('does not trigger when a candidate leaks into a fourth cell', () => {
+    // candidate 6 now leaks into row 0 via (0,3) and into box 0 via (1,0),
+    // breaking the {6,7,8} confined triple in both the row and box groups
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 6, 7] },
+      { row: 0, col: 1, candidates: [2, 6, 8] },
+      { row: 0, col: 2, candidates: [3, 7, 8] },
+      { row: 0, col: 3, candidates: [4, 6] }, // leaks 6 into row 0
+      { row: 1, col: 0, candidates: [5, 6] }, // leaks 6 into box 0
+    ]);
+    expect(check(board)).toBeNull();
+  });
+
+  it('does not trigger when the three cells have no extra candidates to eliminate', () => {
+    // Candidates 6, 7, 8 confined to exactly (0,0){6,7}, (0,1){6,8}, (0,2){7,8} — pure naked triple, no extras
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [6, 7] },
+      { row: 0, col: 1, candidates: [6, 8] },
+      { row: 0, col: 2, candidates: [7, 8] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+});
+
+describe('Y_WING', () => {
+  const check = STRATEGY_CHECKS[MoveStrategy.Y_WING];
+
+  it('finds a y-wing and identifies pivot and two pincers', () => {
+    // Pivot (0,0){1,2}; pinB (0,5){1,3} shares row 0; pinC (5,0){2,3} shares col 0
+    // Victim (5,5){3,4} sees pinB via col 5 and pinC via row 5
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 5, candidates: [1, 3] },
+      { row: 5, col: 0, candidates: [2, 3] },
+      { row: 5, col: 5, candidates: [3, 4] },
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    const positions = result!.cells.map((c) => `${c.row},${c.col}`).sort();
+    // Returns pivot + the two pincers
+    expect(positions).toContain('0,0');
+    expect(positions).toContain('0,5');
+    expect(positions).toContain('5,0');
+  });
+
+  it('does not trigger when there is no victim cell that sees both pincers', () => {
+    // Same pivot and pincers but no unsolved cell with candidate 3 that sees both
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 5, candidates: [1, 3] },
+      { row: 5, col: 0, candidates: [2, 3] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+
+  it('does not trigger when pincers do not share a common third candidate', () => {
+    // pinB has {1,3}, pinC has {2,4} — no shared r
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] },
+      { row: 0, col: 5, candidates: [1, 3] },
+      { row: 5, col: 0, candidates: [2, 4] },
+      { row: 5, col: 5, candidates: [3, 4] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+});
+
 describe('getHint – integration', () => {
   it('picks SINGLE_CANDIDATE first', () => {
     const board = solvedExcept([{ row: 2, col: 4, candidates: [7] }]);
