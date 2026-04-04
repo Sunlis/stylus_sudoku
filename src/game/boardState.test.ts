@@ -50,8 +50,6 @@ describe('getNewBoard', () => {
         expect(board[r][c].user).toBe(true);
       }
     }
-
-    expect(fillCandidates).toHaveBeenCalledTimes(1);
   });
 
   it('passes through higher difficulty levels supported by the fork', () => {

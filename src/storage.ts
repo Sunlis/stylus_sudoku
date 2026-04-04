@@ -32,7 +32,7 @@ class UserStorage {
           ...prefs,
         };
       } catch (e) {
-        console.error('Error parsing user preferences from localStorage', e);
+        console.warn('Error parsing user preferences from localStorage', e);
       }
     }
     return defaultPreferences;

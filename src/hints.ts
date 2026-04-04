@@ -1,7 +1,7 @@
 import { forEachCell, forEachGroup, GroupType } from './sudoku';
 import { Board, Cell } from './types/board';
 
-enum MoveStrategy {
+export enum MoveStrategy {
   UNKNOWN,
   SINGLE_CANDIDATE, // A cell contains only one candidate
   LONE_CANDIDATE, // A candidate is only present in one cell in a group
@@ -42,7 +42,7 @@ const GROUP_NAME = {
   [GroupType.BOX]: "Box",
 };
 
-const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | StrategyResult> = {
+export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | StrategyResult> = {
   // Check for any cell that has only one candidate.
   [MoveStrategy.SINGLE_CANDIDATE]: (cells) => {
     return forEachCell(cells, (cell) => {
@@ -76,7 +76,8 @@ const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | StrategyRes
       }
     }) || null;
   },
-  // Check for any pair of cells in a group that have only the same two candidates.
+  // Check for any pair of cells in a group that have only the same two candidates,
+  // where at least one other cell in the group contains one of those candidates.
   [MoveStrategy.NAKED_PAIR]: (cells) => {
     return forEachGroup(cells, (group) => {
       const pairCells = group.filter(
@@ -86,7 +87,18 @@ const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | StrategyRes
         for (let j = i + 1; j < pairCells.length; j++) {
           const a = pairCells[i].candidates!;
           const b = pairCells[j].candidates!;
-          if (a[0] === b[0] && a[1] === b[1]) {
+          if (a[0] !== b[0] || a[1] !== b[1]) {
+            continue;
+          }
+          const [c1, c2] = a;
+          const hasElimination = group.some(
+            (cell) =>
+              cell !== pairCells[i] &&
+              cell !== pairCells[j] &&
+              cell.value === undefined &&
+              (cell.candidates?.includes(c1) || cell.candidates?.includes(c2)),
+          );
+          if (hasElimination) {
             return { cells: [pairCells[i], pairCells[j]] };
           }
         }

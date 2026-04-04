@@ -8,7 +8,7 @@ export enum GroupType {
 
 /**
  * Run the callback for each "group" in the board (row, column, or box).
- * If the callback returns true, iteration will stop early.
+ * If the callback returns a value, iteration will stop early.
  */
 export function forEachGroup<T>(
   board: Board,

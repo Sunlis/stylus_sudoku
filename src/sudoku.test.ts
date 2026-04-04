@@ -202,7 +202,6 @@ describe('forEachGroup', () => {
       if (count === 5) {
         return true; // stop after 5 groups
       }
-      return false;
     });
 
     expect(groupSizes.every(size => size === 9)).toBe(true);
