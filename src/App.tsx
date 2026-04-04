@@ -13,7 +13,7 @@ import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
 import { RecognitionToast } from '@app/RecognitionToast';
-import { HintPanel } from '@app/HintPanel';
+import { getHint } from '@app/hints';
 import { VictoryDialog } from './victory';
 import { DigitIndicatorRow } from './game/digit_indicator';
 
@@ -40,6 +40,8 @@ function App() {
   const [eraseMode, setEraseMode] = React.useState(false);
   const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
+  const [hintText, setHintText] = React.useState<string | null>(null);
+  const hintTimeoutRef = React.useRef<number | null>(null);
 
   const pushHistory = React.useCallback(
     (snapshotCells: SudokuBoard, snapshotLayers: NoteLayer[]) => {
@@ -147,6 +149,23 @@ function App() {
 
   const handleResetApp = useResetApp();
 
+  const handleHint = () => {
+    if (hintTimeoutRef.current != null) {
+      window.clearTimeout(hintTimeoutRef.current);
+    }
+    try {
+      const { description } = getHint(cells);
+      console.log('Hint:', description);
+      setHintText(description);
+      hintTimeoutRef.current = window.setTimeout(() => {
+        setHintText(null);
+        hintTimeoutRef.current = null;
+      }, 6000);
+    } catch (e) {
+      console.error('getHint threw:', e);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
       <div className="flex w-full max-w-3xl flex-col items-stretch gap-3">
@@ -154,10 +173,7 @@ function App() {
           <Controls
             ref={controlsRef}
             onNewPuzzle={handleNewPuzzle}
-            eraseMode={eraseMode}
-            onToggleEraseMode={() => {
-              setEraseMode((prev) => !prev);
-            }}
+            onHint={handleHint}
             onDrawCandidates={handleDrawCandidates}
             onResetApp={handleResetApp}
             onUndo={() => {
@@ -205,6 +221,7 @@ function App() {
           />
           <NotesLayers
             eraseMode={eraseMode}
+            onToggleEraseMode={() => setEraseMode((prev) => !prev)}
             layers={layers}
             setLayers={(updater) => {
               setLayers((prev) => updater(prev));
@@ -214,7 +231,6 @@ function App() {
               pushHistory(cells, layers);
             }}
           />
-          <HintPanel cells={cells} />
           <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
             <BoardExport cells={cells} />
           </div>
@@ -224,6 +240,26 @@ function App() {
         </main>
       </div>
       <RecognitionToast candidates={recognitionCandidates} />
+      {hintText && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 64,
+            pointerEvents: 'none',
+            border: '3px solid rgba(255, 255, 255, 0.9)',
+            borderRadius: 16,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            color: 'white',
+            fontSize: '0.8rem',
+            padding: '2px 8px',
+            maxWidth: '60vw',
+            textAlign: 'center',
+          }}
+          className="fade-out"
+        >
+          {hintText}
+        </div>
+      )}
       <VictoryDialog
         ref={victoryRef}
         onNewGame={() => {

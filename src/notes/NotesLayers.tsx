@@ -1,12 +1,14 @@
 import React from 'react';
 import { Button } from '@heroui/react';
 
+import { Switch } from '@app/components/switch';
 import plusIcon from '@static/plus.svg';
 import visibleIcon from '@static/visible.svg';
 import hiddenIcon from '@static/hidden.svg';
 import crosshairIcon from '@static/crosshair.svg';
 import paletteIcon from '@static/palette.svg';
 import trashIcon from '@static/trash.svg';
+import pencilIcon from '@static/pencil.svg';
 import eraserIcon from '@static/eraser.svg';
 
 import { getLayerRowColors } from '@app/colour';
@@ -42,6 +44,7 @@ const LAYER_BUTTON_REMOVE_CLASS =
 
 interface NotesLayersProps {
   eraseMode: boolean;
+  onToggleEraseMode: () => void;
   layers: NoteLayer[];
   setLayers: (updater: (prev: NoteLayer[]) => NoteLayer[]) => void;
   onStrokeWillBegin: () => void;
@@ -218,7 +221,6 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
         />
         <div className="flex w-full max-w-3xl flex-col gap-2 rounded-2xl bg-white/90 p-2 shadow-sm ring-1 ring-slate-200">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-800">Note layers</span>
             <Button
               size="sm"
               color="primary"
@@ -230,6 +232,20 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                 <span>Add layer</span>
               </span>
             </Button>
+            <Switch
+              isSelected={eraseMode}
+              onToggle={this.props.onToggleEraseMode}
+              iconOn={eraserIcon}
+              iconOff={pencilIcon}
+              ariaLabel={eraseMode ? 'Switch to draw mode' : 'Switch to erase mode'}
+              title={eraseMode ? 'Eraser on — click to draw' : 'Draw mode — click to erase'}
+              trackColorOff='#208757'
+              trackColorOn='#882434'
+              thumbColorOff='#cfe7d7'
+              thumbColorOn='#e1cbcf'
+              thumbIconColorOn='#000000'
+              thumbIconColorOff='#000000'
+            />
           </div>
           {layers.map((layer) => {
             const { background, border, labelIsLight, backgroundRgb } = getLayerRowColors(

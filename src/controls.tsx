@@ -1,8 +1,7 @@
 import React from 'react';
 import { Button } from '@heroui/react';
-import pencilIcon from '../static/pencil.svg';
-import eraserIcon from '../static/eraser.svg';
 import gridIcon from '../static/grid.svg';
+import questionIcon from '../static/question.svg';
 import undoIcon from '../static/undo.svg';
 import overflowIcon from '../static/overflow.svg';
 import { DIFFICULTIES, DIFFICULTY_LABELS, Difficulty } from './types';
@@ -11,8 +10,7 @@ import { DANGER_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
 
 interface ControlsProps {
   onNewPuzzle: (difficulty: Difficulty) => void;
-  eraseMode: boolean;
-  onToggleEraseMode: () => void;
+  onHint: () => void;
   onUndo: () => void;
   canUndo: boolean;
   onDrawCandidates: () => void;
@@ -74,13 +72,13 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             </Button>
             <Button
               isIconOnly
-              aria-label={this.props.eraseMode ? 'Eraser mode' : 'Draw mode'}
-              onClick={this.props.onToggleEraseMode}
+              aria-label="Hint"
+              onClick={this.props.onHint}
               variant="bordered"
               className="h-10 w-10 rounded-full border border-slate-600 bg-slate-100 text-slate-800 shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-200"
             >
               <img
-                src={this.props.eraseMode ? eraserIcon : pencilIcon}
+                src={questionIcon}
                 alt=""
                 className="h-6 w-6"
               />
