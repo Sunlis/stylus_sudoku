@@ -6,7 +6,7 @@ import { Controls } from '@app/controls';
 import { NotesLayers } from '@app/notes/NotesLayers';
 import { Difficulty } from '@app/types';
 import { userStorage } from '@app/storage';
-import { fillCandidates, isBoardValid } from '@app/sudoku';
+import { clearRelatedCandidates, fillCandidates, isBoardValid } from '@app/sudoku';
 import { createBoard, type Board as SudokuBoard, type Cell as SudokuCell } from '@app/types/board';
 import { NoteLayer } from '@app/types/notes';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
@@ -110,8 +110,13 @@ function App() {
       return cells[nextRow][nextCol];
     });
 
+    const cellsAfterCandidates =
+      cellToStore.user && cellToStore.value !== undefined
+        ? clearRelatedCandidates(nextCells, row, col)
+        : nextCells;
+
     pushHistory(cells, layers);
-    const validated = recomputeValidity(nextCells);
+    const validated = recomputeValidity(cellsAfterCandidates);
     setCells(validated);
 
     const allFilled = validated.every((rowArr) =>
