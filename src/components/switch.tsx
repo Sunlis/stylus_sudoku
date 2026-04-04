@@ -3,8 +3,8 @@ import React from 'react';
 interface SwitchProps {
   isSelected: boolean;
   onToggle: () => void;
-  iconOn: string;
-  iconOff: string;
+  iconOn: React.ReactNode;
+  iconOff: React.ReactNode;
   ariaLabel?: string;
   title?: string;
   trackColorOn?: string;
@@ -73,20 +73,16 @@ export class Switch extends React.Component<SwitchProps> {
           >
             <span
               style={{
-                display: 'inline-block',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 width: '1rem',
                 height: '1rem',
-                WebkitMaskImage: `url(${isSelected ? iconOn : iconOff})`,
-                maskImage: `url(${isSelected ? iconOn : iconOff})`,
-                WebkitMaskSize: 'contain',
-                maskSize: 'contain',
-                WebkitMaskRepeat: 'no-repeat',
-                maskRepeat: 'no-repeat',
-                WebkitMaskPosition: 'center',
-                maskPosition: 'center',
-                backgroundColor: isSelected ? thumbIconColorOn : thumbIconColorOff,
+                color: isSelected ? thumbIconColorOn : thumbIconColorOff,
               }}
-            />
+            >
+              {isSelected ? iconOn : iconOff}
+            </span>
           </div>
         </div>
       </label>

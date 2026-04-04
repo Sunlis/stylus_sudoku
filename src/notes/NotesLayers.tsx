@@ -2,13 +2,13 @@ import React from 'react';
 import { Button } from '@heroui/react';
 
 import { Switch } from '@app/components/switch';
+import { PencilIcon, EraserIcon } from '@app/components/icons';
 import plusIcon from '@static/plus.svg';
 import visibleIcon from '@static/visible.svg';
 import hiddenIcon from '@static/hidden.svg';
 import crosshairIcon from '@static/crosshair.svg';
 import paletteIcon from '@static/palette.svg';
 import trashIcon from '@static/trash.svg';
-import pencilIcon from '@static/pencil.svg';
 import eraserIcon from '@static/eraser.svg';
 
 import { getLayerRowColors } from '@app/colour';
@@ -235,8 +235,8 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
             <Switch
               isSelected={eraseMode}
               onToggle={this.props.onToggleEraseMode}
-              iconOn={eraserIcon}
-              iconOff={pencilIcon}
+              iconOn={<EraserIcon />}
+              iconOff={<PencilIcon />}
               ariaLabel={eraseMode ? 'Switch to draw mode' : 'Switch to erase mode'}
               title={eraseMode ? 'Eraser on — click to draw' : 'Draw mode — click to erase'}
               trackColorOff='#208757'
