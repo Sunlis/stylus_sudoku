@@ -109,6 +109,7 @@ export class Cell extends React.Component<CellProps> {
     }
     let color = '#000000';
     let bg = 'unset';
+    let border = undefined;
     let borderLeft = 1;
     let borderTop = 1;
     if (this.props.col % 3 === 0) {
@@ -118,11 +119,10 @@ export class Cell extends React.Component<CellProps> {
       borderTop = 2;
     }
     if (this.props.value !== undefined) {
-      color = '#fff';
       if (this.props.user) {
-        bg = 'rgba(72, 150, 134, 0.7)';
+        border = 'rgba(72, 150, 134, 0.3)';
       } else {
-        bg = 'rgba(33, 21, 4, 0.4)';
+        border = 'rgba(33, 21, 4, 0.2)';
       }
     } else {
       color = '#444';
@@ -130,18 +130,14 @@ export class Cell extends React.Component<CellProps> {
 
     if (this.props.highlightDigit && this.props.value === this.props.highlightDigit) {
       if (this.props.user) {
-        bg = 'rgba(191, 77, 252, 0.75)'; // warm highlight for user-filled cells
+        bg = 'rgba(191, 77, 252, 0.75)';
       } else {
-        bg = 'rgba(129, 140, 248, 0.7)'; // cooler highlight for given cells
+        bg = 'rgba(248, 224, 129, 0.7)';
       }
     }
 
     if (this.props.valid === false) {
-      if (this.props.user) {
-        bg = 'rgba(255, 100, 100, 0.3)';
-      } else {
-        bg = 'rgba(100, 0, 0, 0.3)';
-      }
+      bg = 'rgba(255, 100, 100, 0.5)';
     }
 
     const cellClassNames = [
@@ -149,8 +145,6 @@ export class Cell extends React.Component<CellProps> {
       'w-[10vw]',
       'items-center',
       'justify-center',
-      'border',
-      'border-slate-800/80',
       'bg-white',
       'text-slate-900',
       'sudoku-cell',
@@ -158,19 +152,24 @@ export class Cell extends React.Component<CellProps> {
     ].filter(a => !!a).join(' ');
 
     return (
-      <div
-        className={cellClassNames}
-        style={{
-          borderLeftWidth: borderLeft,
-          borderTopWidth: borderTop,
-          borderRight: 'none',
-          borderBottom: 'none',
-          boxSizing: 'border-box',
-          backgroundColor: bg,
-          color,
-        }}
-      >
-        {interior}
+      <div style={{
+        borderLeftWidth: borderLeft,
+        borderTopWidth: borderTop,
+        borderRight: 'none',
+        borderBottom: 'none',
+        borderColor: '#000',
+      }}>
+        <div
+          className={cellClassNames}
+          style={{
+            boxSizing: 'border-box',
+            color,
+            border: border ? `8px solid ${border}` : undefined,
+            backgroundColor: bg,
+          }}
+        >
+          {interior}
+        </div>
       </div>
     );
   }
