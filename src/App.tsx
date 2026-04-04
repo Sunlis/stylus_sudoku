@@ -153,17 +153,20 @@ function App() {
     if (hintTimeoutRef.current != null) {
       window.clearTimeout(hintTimeoutRef.current);
     }
-    try {
-      const { description } = getHint(cells);
-      console.log('Hint:', description);
-      setHintText(description);
-      hintTimeoutRef.current = window.setTimeout(() => {
-        setHintText(null);
-        hintTimeoutRef.current = null;
-      }, 6000);
-    } catch (e) {
-      console.error('getHint threw:', e);
-    }
+    setHintText(null);
+    setTimeout(() => {
+      try {
+        const { description } = getHint(cells);
+        console.log('Hint:', description);
+        setHintText(description);
+        hintTimeoutRef.current = window.setTimeout(() => {
+          setHintText(null);
+          hintTimeoutRef.current = null;
+        }, 6000);
+      } catch (e) {
+        console.error('getHint threw:', e);
+      }
+    }, 1);
   };
 
   return (
