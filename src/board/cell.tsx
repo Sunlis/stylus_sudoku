@@ -109,7 +109,6 @@ export class Cell extends React.Component<CellProps> {
     }
     let color = '#000000';
     let bg = 'unset';
-    let fontSize = '1rem';
     let borderLeft = 1;
     let borderTop = 1;
     if (this.props.col % 3 === 0) {
@@ -119,11 +118,11 @@ export class Cell extends React.Component<CellProps> {
       borderTop = 2;
     }
     if (this.props.value !== undefined) {
+      color = '#fff';
       if (this.props.user) {
-        color = '#000';
-        fontSize = '1.1rem';
+        bg = 'rgba(72, 150, 134, 0.7)';
       } else {
-        bg = 'rgba(0, 0, 0, 0.1)';
+        bg = 'rgba(33, 21, 4, 0.4)';
       }
     } else {
       color = '#444';
