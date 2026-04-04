@@ -52,12 +52,10 @@ describe('getNewBoard', () => {
     }
   });
 
-  it('passes through higher difficulty levels supported by the fork', () => {
-    getNewBoard('evil');
-    getNewBoard('extreme');
+  it('passes the difficulty level through to getSudoku', () => {
+    getNewBoard('expert');
 
-    expect(getSudoku).toHaveBeenNthCalledWith(1, 'evil');
-    expect(getSudoku).toHaveBeenNthCalledWith(2, 'extreme');
+    expect(getSudoku).toHaveBeenCalledWith('expert');
   });
 });
 
