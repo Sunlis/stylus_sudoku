@@ -7,7 +7,6 @@ enum MoveStrategy {
   LONE_CANDIDATE, // A candidate is only present in one cell in a group
   NAKED_PAIR, // A pair of cells in a group have only the same two candidates
   HIDDEN_PAIR, // A pair of candidates in a group are only present in the same two cells
-  POINTING_ELIMINATION // A candidate appears in only one row/column within a box
 }
 
 interface StrategyResult {
@@ -26,7 +25,6 @@ const STRATEGIES: MoveStrategy[] = [
   MoveStrategy.LONE_CANDIDATE,
   MoveStrategy.NAKED_PAIR,
   MoveStrategy.HIDDEN_PAIR,
-  MoveStrategy.POINTING_ELIMINATION,
   MoveStrategy.UNKNOWN,
 ];
 
@@ -34,9 +32,8 @@ const STRATEGY_MAP: Record<MoveStrategy, string> = {
   [MoveStrategy.UNKNOWN]: "No hints available.",
   [MoveStrategy.SINGLE_CANDIDATE]: "A cell contains only one candidate.",
   [MoveStrategy.LONE_CANDIDATE]: "Group has only one valid position for a candidate.",
-  [MoveStrategy.NAKED_PAIR]: "Group has a candidate that only appears in one cell.",
-  [MoveStrategy.HIDDEN_PAIR]: "Group contains two cells with the same two candidates.",
-  [MoveStrategy.POINTING_ELIMINATION]: "Candidate appears in only one row/column within a box.",
+  [MoveStrategy.NAKED_PAIR]: "A pair of cells in a group have only the same two candidates.",
+  [MoveStrategy.HIDDEN_PAIR]: "A pair of candidates in a group are only present in the same two cells.",
 };
 
 const GROUP_NAME = {
@@ -79,14 +76,49 @@ const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | StrategyRes
       }
     }) || null;
   },
+  // Check for any pair of cells in a group that have only the same two candidates.
   [MoveStrategy.NAKED_PAIR]: (cells) => {
-    return null;
+    return forEachGroup(cells, (group) => {
+      const pairCells = group.filter(
+        (cell) => cell.value === undefined && cell.candidates?.length === 2,
+      );
+      for (let i = 0; i < pairCells.length; i++) {
+        for (let j = i + 1; j < pairCells.length; j++) {
+          const a = pairCells[i].candidates!;
+          const b = pairCells[j].candidates!;
+          if (a[0] === b[0] && a[1] === b[1]) {
+            return { cells: [pairCells[i], pairCells[j]] };
+          }
+        }
+      }
+    }) || null;
   },
+  // Check for any pair of candidates in a group that are only present in the same two cells.
   [MoveStrategy.HIDDEN_PAIR]: (cells) => {
-    return null;
-  },
-  [MoveStrategy.POINTING_ELIMINATION]: (cells) => {
-    return null;
+    return forEachGroup(cells, (group) => {
+      const candidatesMap: Record<number, Cell[]> = {};
+      for (const cell of group) {
+        if (cell.value !== undefined) continue;
+        for (const candidate of cell.candidates ?? []) {
+          if (!candidatesMap[candidate]) {
+            candidatesMap[candidate] = [];
+          }
+          candidatesMap[candidate].push(cell);
+        }
+      }
+      const pairCandidates = Object.values(candidatesMap).filter(
+        (c) => c.length === 2,
+      );
+      for (let i = 0; i < pairCandidates.length; i++) {
+        for (let j = i + 1; j < pairCandidates.length; j++) {
+          const a = pairCandidates[i];
+          const b = pairCandidates[j];
+          if (a[0] === b[0] && a[1] === b[1]) {
+            return { cells: a };
+          }
+        }
+      }
+    }) || null;
   },
   [MoveStrategy.UNKNOWN]: () => {
     return { cells: [] };
