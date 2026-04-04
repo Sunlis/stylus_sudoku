@@ -38,7 +38,6 @@ function App() {
   type HistoryEntry = { cells: SudokuBoard; layers: NoteLayer[]; };
   const [history, setHistory] = React.useState<HistoryEntry[]>([]);
   const [eraseMode, setEraseMode] = React.useState(false);
-  const [candidateMode, setCandidateMode] = React.useState(false);
   const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
 
@@ -159,8 +158,6 @@ function App() {
             onToggleEraseMode={() => {
               setEraseMode((prev) => !prev);
             }}
-            candidateMode={candidateMode}
-            onToggleCandidateMode={() => setCandidateMode((prev) => !prev)}
             onDrawCandidates={handleDrawCandidates}
             onResetApp={handleResetApp}
             onUndo={() => {
@@ -183,7 +180,6 @@ function App() {
               eraseMode={eraseMode}
               highlightDigit={highlightDigit ?? undefined}
               onChangeCell={handleChangeCell}
-              candidateMode={candidateMode}
               onToggleCandidate={handleToggleCandidate}
               onRecognitionCandidates={(_row, _col, outcome) => {
                 showCandidates(outcome);

@@ -8,7 +8,6 @@ export interface CellProps extends SudokuCell {
   setNumber?: (num: number | null) => void;
   eraseMode?: boolean;
   onRecognitionCandidates?: (row: number, column: number, outcome: RecognitionOutcome) => void;
-  candidateMode?: boolean;
   onToggleCandidate?: (num: number) => void;
   highlightDigit?: number;
 }
@@ -72,48 +71,41 @@ export class Cell extends React.Component<CellProps> {
     }
     if (this.props.user) {
       const showCandidateGrid = this.props.value === undefined;
-      if (this.props.candidateMode && showCandidateGrid) {
-        interior = (
-          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <CandidateGrid
-              candidates={this.props.candidates}
-              interactive={true}
-              highlightDigit={this.props.highlightDigit}
-              onToggle={this.props.onToggleCandidate}
-            />
-          </div>
-        );
-      } else {
-        interior = <div style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-        }}>
-          <InputPanel
-            anchor={{ x: 0, y: 0 }}
-            canvasSize={100}
-            eraseMode={this.props.eraseMode}
-            storageKey={`${this.props.row},${this.props.col}`}
-            onNumberRecognized={(num) => {
-              this.props.setNumber?.(num);
-            }}
-            onClearCell={() => {
-              this.props.setNumber?.(null);
-            }}
-            onCandidatesRecognized={(outcome) => {
-              this.props.onRecognitionCandidates?.(this.props.row, this.props.col, outcome);
-            }}
+      interior = <div style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+      }}>
+        <InputPanel
+          anchor={{ x: 0, y: 0 }}
+          canvasSize={100}
+          eraseMode={this.props.eraseMode}
+          storageKey={`${this.props.row},${this.props.col}`}
+          onNumberRecognized={(num) => {
+            this.props.setNumber?.(num);
+          }}
+          onClearCell={() => {
+            this.props.setNumber?.(null);
+          }}
+          onCandidatesRecognized={(outcome) => {
+            this.props.onRecognitionCandidates?.(this.props.row, this.props.col, outcome);
+          }}
+          onTap={(pos) => {
+            const subCol = Math.min(2, Math.floor(pos.x / (100 / 3)));
+            const subRow = Math.min(2, Math.floor(pos.y / (100 / 3)));
+            const num = subRow * 3 + subCol + 1;
+            this.props.onToggleCandidate?.(num);
+          }}
+        />
+        {interior}
+        {showCandidateGrid && (
+          <CandidateGrid
+            candidates={this.props.candidates}
+            interactive={false}
+            highlightDigit={this.props.highlightDigit}
           />
-          {interior}
-          {showCandidateGrid && (
-            <CandidateGrid
-              candidates={this.props.candidates}
-              interactive={false}
-              highlightDigit={this.props.highlightDigit}
-            />
-          )}
-        </div>;
-      }
+        )}
+      </div>;
     }
     let color = '#000000';
     let bg = 'unset';

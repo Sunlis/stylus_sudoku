@@ -17,6 +17,7 @@ interface Props {
   onClearCell?: () => void;
   onStateChange?: (state: InputState) => void;
   onCandidatesRecognized?: (outcome: RecognitionOutcome) => void;
+  onTap?: (position: { x: number; y: number; }) => void;
   eraseMode?: boolean;
   storageKey?: string;
 }
@@ -24,6 +25,8 @@ interface Props {
 interface State {
   mouseDown: boolean;
   previousMouse?: { x: number; y: number; };
+  startPosition?: { x: number; y: number; };
+  hasMoved: boolean;
   inputState: InputState;
 }
 
@@ -37,6 +40,8 @@ export class InputPanel extends React.Component<Props, State> {
     this.state = {
       mouseDown: false,
       previousMouse: undefined,
+      startPosition: undefined,
+      hasMoved: false,
       inputState: InputState.IDLE,
     };
   }
@@ -111,6 +116,8 @@ export class InputPanel extends React.Component<Props, State> {
     this.changeState(InputState.INPUT, {
       mouseDown: true,
       previousMouse: { x: pos.x, y: pos.y },
+      startPosition: { x: pos.x, y: pos.y },
+      hasMoved: false,
     });
     this.trace.beginStroke();
     // Record the initial contact point so we don't drop
@@ -120,6 +127,15 @@ export class InputPanel extends React.Component<Props, State> {
 
   private touchEnd(event: TouchEvent) {
     if (this.props.eraseMode) {
+      return;
+    }
+    if (!this.state.hasMoved && this.state.startPosition && this.props.onTap) {
+      this.props.onTap(this.state.startPosition);
+      this.trace.clear();
+      const canvas = this.canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this.changeState(InputState.IDLE, { mouseDown: false, previousMouse: undefined });
       return;
     }
     this.changeState(InputState.THINKING,
@@ -158,6 +174,13 @@ export class InputPanel extends React.Component<Props, State> {
     const ctx = canvas.getContext('2d')!;
     const { x, y } = this.relativePosition(event);
     const previous = this.state.previousMouse ?? { x, y };
+    if (!this.state.hasMoved && this.state.startPosition) {
+      const dx = x - this.state.startPosition.x;
+      const dy = y - this.state.startPosition.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 10) {
+        this.setState({ hasMoved: true });
+      }
+    }
     ctx.strokeStyle = 'black';
     ctx.lineWidth = PEN_SIZE;
     ctx.moveTo(previous.x, previous.y);

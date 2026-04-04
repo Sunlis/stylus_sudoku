@@ -45,6 +45,7 @@ interface NotesLayersProps {
   layers: NoteLayer[];
   setLayers: (updater: (prev: NoteLayer[]) => NoteLayer[]) => void;
   onStrokeWillBegin: () => void;
+  onLayerActivated?: () => void;
   highlightDigit?: number;
 }
 
@@ -130,8 +131,18 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
     ));
   };
 
+  deactivateLayer = (): void => {
+    this.setState({ activeLayerId: null });
+  };
+
   toggleActive = (id: number): void => {
-    this.setState((prev) => ({ activeLayerId: prev.activeLayerId === id ? null : id }));
+    this.setState((prev) => {
+      const nextId = prev.activeLayerId === id ? null : id;
+      if (nextId !== null) {
+        this.props.onLayerActivated?.();
+      }
+      return { activeLayerId: nextId };
+    });
   };
 
   cycleColor = (id: number): void => {
