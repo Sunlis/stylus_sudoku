@@ -243,6 +243,9 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           if (pinC === pivot || pinC === pinB || !seesCell(pivot, pinC)) continue;
           if (!pinC.candidates!.includes(q) || pinC.candidates!.includes(p)) continue;
           if (!pinC.candidates!.includes(r)) continue;
+          // Pincers must not see each other — if they do, the pattern degenerates
+          // into locked candidates and is not a true Y-wing.
+          if (seesCell(pinB, pinC)) continue;
           // Valid Y-wing: find a victim that sees both pincers and holds r
           for (const row of board) {
             for (const cell of row) {

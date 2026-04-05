@@ -232,6 +232,32 @@ describe('Y_WING', () => {
     expect(positions).toContain('0,0');
     expect(positions).toContain('0,5');
     expect(positions).toContain('5,0');
+    // extra identifies the victim
+    expect(result!.extra).toContain('R6C6');
+  });
+
+  it('does not trigger when pincers see each other (same row)', () => {
+    // R4C2=[2,4] pivot, R4C4=[2,9] pinB, R4C5=[4,9] pinC — all in row 4
+    // pinB and pinC share the same row AND box, so they see each other → degenerate case.
+    // A potential victim (R5C4=[9,5]) exists in the shared box, but no Y-wing should fire.
+    const board = solvedExcept([
+      { row: 3, col: 1, candidates: [2, 4] }, // R4C2 pivot
+      { row: 3, col: 3, candidates: [2, 9] }, // R4C4 pinB
+      { row: 3, col: 4, candidates: [4, 9] }, // R4C5 pinC
+      { row: 4, col: 3, candidates: [5, 9] }, // potential victim in shared box
+    ]);
+    expect(check(board)).toBeNull();
+  });
+
+  it('does not trigger when pincers share a box but not a row (still see each other)', () => {
+    // All three in the same box — pincers see each other via box
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [1, 2] }, // pivot
+      { row: 0, col: 1, candidates: [1, 3] }, // pinB — sees pivot (row), sees pinC (box)
+      { row: 1, col: 0, candidates: [2, 3] }, // pinC — sees pivot (col), sees pinB (box)
+      { row: 1, col: 1, candidates: [3, 4] }, // potential victim in same box
+    ]);
+    expect(check(board)).toBeNull();
   });
 
   it('does not trigger when there is no victim cell that sees both pincers', () => {
