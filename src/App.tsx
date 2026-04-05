@@ -158,6 +158,10 @@ function App() {
   const handleResetApp = useResetApp();
 
   const handleHint = () => {
+    if (hintText !== null) {
+      setHintText(null);
+      return;
+    }
     try {
       const { strategy, description, result } = getHint(cells);
       console.log(MoveStrategy[strategy], description, result);
