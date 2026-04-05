@@ -213,6 +213,63 @@ describe('HIDDEN_TRIPLE', () => {
   });
 });
 
+describe('LOCKED_CANDIDATES', () => {
+  const check = STRATEGY_CHECKS[MoveStrategy.LOCKED_CANDIDATES];
+
+  it('Type 1 (pointing pair): candidate confined to one row within a box eliminates from rest of row', () => {
+    // Candidate 5 in box (0,0) only appears in row 0 (cols 0 and 1).
+    // Cell (0,6) also has candidate 5 — outside the box in the same row → should be eliminated.
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [3, 5] },
+      { row: 0, col: 1, candidates: [5, 7] },
+      { row: 1, col: 0, candidates: [3, 7] }, // candidate 5 absent from rest of box
+      { row: 0, col: 6, candidates: [5, 9] }, // victim outside box in row 0
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    expect(result!.extra).toContain('Row 1');
+    expect(result!.extra).toContain('outside Box 1');
+  });
+
+  it('Type 1 (pointing pair): candidate confined to one column within a box eliminates from rest of column', () => {
+    // Candidate 4 in box (0,0) only appears in col 2 (rows 0 and 1).
+    // Cell (6,2) also has candidate 4 — outside the box in the same column → should be eliminated.
+    const board = solvedExcept([
+      { row: 0, col: 2, candidates: [4, 6] },
+      { row: 1, col: 2, candidates: [4, 8] },
+      { row: 0, col: 0, candidates: [6, 8] }, // candidate 4 absent from rest of box row
+      { row: 6, col: 2, candidates: [4, 9] }, // victim outside box in col 2
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    expect(result!.extra).toContain('Column 3');
+    expect(result!.extra).toContain('outside Box 1');
+  });
+
+  it('Type 2 (box-line reduction): candidate confined to one box within a row eliminates from rest of box', () => {
+    // Candidate 6 in row 3 only appears in box (1,0) (cols 0–2).
+    // Cell (4,1) also has candidate 6 — in the same box but different row → should be eliminated.
+    const board = solvedExcept([
+      { row: 3, col: 0, candidates: [6, 9] },
+      { row: 3, col: 1, candidates: [2, 6] },
+      { row: 4, col: 1, candidates: [6, 7] }, // victim: same box, different row
+    ]);
+    const result = check(board);
+    expect(result).not.toBeNull();
+    expect(result!.extra).toContain('Box 4');
+    expect(result!.extra).toContain('Row 4');
+  });
+
+  it('does not trigger when no eliminations are possible', () => {
+    // Candidate 3 in box (0,0) is in two different rows AND two different cols — not locked.
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [3, 5] },
+      { row: 1, col: 1, candidates: [3, 7] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
+});
+
 describe('Y_WING', () => {
   const check = STRATEGY_CHECKS[MoveStrategy.Y_WING];
 

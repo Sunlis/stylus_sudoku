@@ -9,6 +9,7 @@ export enum MoveStrategy {
   HIDDEN_PAIR, // A pair of candidates in a group are only present in the same two cells
   NAKED_TRIPLE, // Three cells in a group whose candidates are all subsets of the same three digits
   HIDDEN_TRIPLE, // Three candidates in a group that are only present in the same three cells
+  LOCKED_CANDIDATES, // A candidate in a box is confined to one row/col (or vice-versa), allowing eliminations
   Y_WING, // A pivot cell with two candidates links two pincers, eliminating a shared candidate
 }
 
@@ -30,6 +31,7 @@ const STRATEGIES: MoveStrategy[] = [
   MoveStrategy.HIDDEN_PAIR,
   MoveStrategy.NAKED_TRIPLE,
   MoveStrategy.HIDDEN_TRIPLE,
+  MoveStrategy.LOCKED_CANDIDATES,
   MoveStrategy.Y_WING,
   MoveStrategy.UNKNOWN,
 ];
@@ -42,6 +44,7 @@ const STRATEGY_MAP: Record<MoveStrategy, string> = {
   [MoveStrategy.HIDDEN_PAIR]: "A pair of candidates in a group are only present in the same two cells.",
   [MoveStrategy.NAKED_TRIPLE]: "Three cells in a group share only the same three candidates.",
   [MoveStrategy.HIDDEN_TRIPLE]: "Three candidates in a group are confined to the same three cells.",
+  [MoveStrategy.LOCKED_CANDIDATES]: "A candidate is locked within a box's row or column.",
   [MoveStrategy.Y_WING]: "A pivot cell with two pincers allows elimination of a shared candidate.",
 };
 
@@ -222,6 +225,142 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
         }
       }
     }) || null;
+  },
+  // Check for locked candidates:
+  // Type 1 (pointing): a candidate within a box is confined to one row or column
+  //   → eliminate from the rest of that row/column outside the box.
+  // Type 2 (box-line reduction): a candidate within a row/column is confined to one box
+  //   → eliminate from the rest of that box.
+  [MoveStrategy.LOCKED_CANDIDATES]: (board) => {
+    // Type 1: pointing pairs/triples
+    for (let boxRow = 0; boxRow < 3; boxRow++) {
+      for (let boxCol = 0; boxCol < 3; boxCol++) {
+        const boxCells: Cell[] = [];
+        for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
+          for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
+            if (board[r][c].value === undefined) {
+              boxCells.push(board[r][c]);
+            }
+          }
+        }
+        const candidatesInBox: Record<number, Cell[]> = {};
+        for (const cell of boxCells) {
+          for (const cand of cell.candidates ?? []) {
+            if (!candidatesInBox[cand]) candidatesInBox[cand] = [];
+            candidatesInBox[cand].push(cell);
+          }
+        }
+        for (const candStr in candidatesInBox) {
+          const cand = Number(candStr);
+          const cells = candidatesInBox[cand];
+          if (cells.length < 2) continue;
+          const rows = [...new Set(cells.map((c) => c.row))];
+          const cols = [...new Set(cells.map((c) => c.col))];
+          if (rows.length === 1) {
+            // All in the same row — can eliminate from rest of that row outside this box
+            const victims = board[rows[0]].filter(
+              (c) => c.value === undefined &&
+                Math.floor(c.col / 3) !== boxCol &&
+                c.candidates?.includes(cand),
+            );
+            if (victims.length > 0) {
+              return {
+                cells,
+                extra: `eliminate ${cand} from Row ${rows[0] + 1} outside Box ${boxRow * 3 + boxCol + 1}`,
+              };
+            }
+          }
+          if (cols.length === 1) {
+            // All in the same column — can eliminate from rest of that column outside this box
+            const victims = board.map((row) => row[cols[0]]).filter(
+              (c) => c.value === undefined &&
+                Math.floor(c.row / 3) !== boxRow &&
+                c.candidates?.includes(cand),
+            );
+            if (victims.length > 0) {
+              return {
+                cells,
+                extra: `eliminate ${cand} from Column ${cols[0] + 1} outside Box ${boxRow * 3 + boxCol + 1}`,
+              };
+            }
+          }
+        }
+      }
+    }
+    // Type 2: box-line reduction
+    for (let r = 0; r < 9; r++) {
+      const rowCells = board[r].filter((c) => c.value === undefined);
+      const candidatesInRow: Record<number, Cell[]> = {};
+      for (const cell of rowCells) {
+        for (const cand of cell.candidates ?? []) {
+          if (!candidatesInRow[cand]) candidatesInRow[cand] = [];
+          candidatesInRow[cand].push(cell);
+        }
+      }
+      for (const candStr in candidatesInRow) {
+        const cand = Number(candStr);
+        const cells = candidatesInRow[cand];
+        if (cells.length < 2) continue;
+        const boxCols = [...new Set(cells.map((c) => Math.floor(c.col / 3)))];
+        if (boxCols.length === 1) {
+          const boxCol = boxCols[0];
+          const boxRow = Math.floor(r / 3);
+          const victims: Cell[] = [];
+          for (let br = boxRow * 3; br < boxRow * 3 + 3; br++) {
+            if (br === r) continue;
+            const c = board[br].filter(
+              (cell) => cell.value === undefined &&
+                Math.floor(cell.col / 3) === boxCol &&
+                cell.candidates?.includes(cand),
+            );
+            victims.push(...c);
+          }
+          if (victims.length > 0) {
+            return {
+              cells,
+              extra: `eliminate ${cand} from Box ${boxRow * 3 + boxCol + 1} outside Row ${r + 1}`,
+            };
+          }
+        }
+      }
+    }
+    for (let c = 0; c < 9; c++) {
+      const colCells = board.map((row) => row[c]).filter((cell) => cell.value === undefined);
+      const candidatesInCol: Record<number, Cell[]> = {};
+      for (const cell of colCells) {
+        for (const cand of cell.candidates ?? []) {
+          if (!candidatesInCol[cand]) candidatesInCol[cand] = [];
+          candidatesInCol[cand].push(cell);
+        }
+      }
+      for (const candStr in candidatesInCol) {
+        const cand = Number(candStr);
+        const cells = candidatesInCol[cand];
+        if (cells.length < 2) continue;
+        const boxRows = [...new Set(cells.map((cell) => Math.floor(cell.row / 3)))];
+        if (boxRows.length === 1) {
+          const boxRow = boxRows[0];
+          const boxCol = Math.floor(c / 3);
+          const victims: Cell[] = [];
+          for (let bc = boxCol * 3; bc < boxCol * 3 + 3; bc++) {
+            if (bc === c) continue;
+            const v = board.map((row) => row[bc]).filter(
+              (cell) => cell.value === undefined &&
+                Math.floor(cell.row / 3) === boxRow &&
+                cell.candidates?.includes(cand),
+            );
+            victims.push(...v);
+          }
+          if (victims.length > 0) {
+            return {
+              cells,
+              extra: `eliminate ${cand} from Box ${boxRow * 3 + boxCol + 1} outside Column ${c + 1}`,
+            };
+          }
+        }
+      }
+    }
+    return null;
   },
   // Check for a pivot cell linking two pincers that share a candidate to eliminate.
   [MoveStrategy.Y_WING]: (board) => {
