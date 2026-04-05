@@ -41,7 +41,6 @@ function App() {
   const [highlightDigit, setHighlightDigit] = React.useState<number | null>(null);
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
   const [hintText, setHintText] = React.useState<string | null>(null);
-  const hintTimeoutRef = React.useRef<number | null>(null);
   const [isLandscape, setIsLandscape] = React.useState(
     () => window.matchMedia('(orientation: landscape)').matches
   );
@@ -159,23 +158,13 @@ function App() {
   const handleResetApp = useResetApp();
 
   const handleHint = () => {
-    if (hintTimeoutRef.current != null) {
-      window.clearTimeout(hintTimeoutRef.current);
+    try {
+      const { strategy, description, result } = getHint(cells);
+      console.log(MoveStrategy[strategy], description, result);
+      setHintText(description);
+    } catch (e) {
+      console.error('getHint threw:', e);
     }
-    setHintText(null);
-    setTimeout(() => {
-      try {
-        const { strategy, description, result } = getHint(cells);
-        console.log(MoveStrategy[strategy], description, result);
-        setHintText(description);
-        hintTimeoutRef.current = window.setTimeout(() => {
-          setHintText(null);
-          hintTimeoutRef.current = null;
-        }, 6000);
-      } catch (e) {
-        console.error('getHint threw:', e);
-      }
-    }, 1);
   };
 
   return (
@@ -212,6 +201,19 @@ function App() {
                 }}
                 canUndo={history.length > 0}
               />
+              {hintText && (
+                <div className="w-full rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs text-slate-800 leading-relaxed">{hintText}</p>
+                    <button
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                      onClick={() => setHintText(null)}
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Board sits here in portrait (between controls and digit indicator) */}
               {!isLandscape && (
                 <div className="flex justify-center">
@@ -290,26 +292,6 @@ function App() {
         </main>
       </div>
       <RecognitionToast candidates={recognitionCandidates} />
-      {hintText && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 64,
-            pointerEvents: 'none',
-            border: '3px solid rgba(255, 255, 255, 0.9)',
-            borderRadius: 16,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            fontSize: '0.8rem',
-            padding: '2px 8px',
-            maxWidth: '60vw',
-            textAlign: 'center',
-          }}
-          className="fade-out"
-        >
-          {hintText}
-        </div>
-      )}
       <VictoryDialog
         ref={victoryRef}
         onNewGame={() => {
