@@ -36,6 +36,7 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
     this.resizeObserver = new ResizeObserver(() => this.updateBoardRect());
     this.resizeObserver.observe(boardEl);
     window.addEventListener('scroll', this.updateBoardRect, { passive: true });
+    window.addEventListener('resize', this.updateBoardRect, { passive: true });
   }
 
   componentDidUpdate(prevProps: NotesLayersOverlayProps): void {
@@ -51,6 +52,7 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     window.removeEventListener('scroll', this.updateBoardRect);
+    window.removeEventListener('resize', this.updateBoardRect);
   }
 
   updateBoardRect = (): void => {
