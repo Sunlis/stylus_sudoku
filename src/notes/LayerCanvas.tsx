@@ -9,7 +9,7 @@ const COLORS = [
   '#ffa500',
 ];
 
-const STROKE_WIDTH = 2;
+const STROKE_WIDTH = 4;
 const ERASER_WIDTH = 12;
 
 interface LayerCanvasProps {
