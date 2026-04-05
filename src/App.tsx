@@ -187,6 +187,23 @@ function App() {
                 onHint={handleHint}
                 onDrawCandidates={handleDrawCandidates}
                 onResetApp={handleResetApp}
+                onCopyDebug={() => {
+                  const overrides = cells.flatMap((row) =>
+                    row.flatMap((cell) => {
+                      if (cell.value !== undefined) return [];
+                      return [{
+                        row: cell.row,
+                        col: cell.col,
+                        ...(cell.candidates?.length ? { candidates: cell.candidates } : {}),
+                      }];
+                    })
+                  );
+                  const json = JSON.stringify(overrides, null, 2);
+                  const snippet = `solvedExcept(${json})`;
+                  navigator.clipboard.writeText(snippet).catch(() => {
+                    console.log('Board debug fixture:\n', snippet);
+                  });
+                }}
                 onUndo={() => {
                   setHistory((prevHistory) => {
                     if (prevHistory.length === 0) {

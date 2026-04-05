@@ -15,6 +15,7 @@ interface ControlsProps {
   canUndo: boolean;
   onDrawCandidates: () => void;
   onResetApp: () => void;
+  onCopyDebug: () => void;
 }
 
 interface ControlsState {
@@ -190,6 +191,16 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
               }}
             >
               Draw Candidates
+            </Button>
+            <Button
+              className={SECONDARY_BUTTON}
+              variant="bordered"
+              onClick={() => {
+                this.overflowDialogRef.current?.close();
+                this.props.onCopyDebug();
+              }}
+            >
+              Copy board as test fixture
             </Button>
             <Button
               className={DANGER_BUTTON}
