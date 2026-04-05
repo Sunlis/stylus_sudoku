@@ -171,74 +171,99 @@ function App() {
 
   return (
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
-      <div className="flex w-full max-w-3xl flex-col items-stretch gap-3">
-        <main className="mt-0 flex flex-col items-center gap-2">
-          <Controls
-            ref={controlsRef}
-            onNewPuzzle={handleNewPuzzle}
-            onHint={handleHint}
-            onDrawCandidates={handleDrawCandidates}
-            onResetApp={handleResetApp}
-            onUndo={() => {
-              setHistory((prevHistory) => {
-                if (prevHistory.length === 0) {
-                  return prevHistory;
-                }
-                const nextHistory = [...prevHistory];
-                const previous = nextHistory.pop()!;
-                setCells(previous.cells);
-                setLayers(previous.layers);
-                return nextHistory;
-              });
-            }}
-            canUndo={history.length > 0}
-          />
-          <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
-            <Board
-              cells={cells}
-              eraseMode={eraseMode}
-              highlightDigit={highlightDigit ?? undefined}
-              onChangeCell={handleChangeCell}
-              onToggleCandidate={handleToggleCandidate}
-              onRecognitionCandidates={(_row, _col, outcome) => {
-                showCandidates(outcome);
-              }}
-            />
-          </div>
-          <DigitIndicatorRow
-            digits={Array.from({ length: 9 }, (_, i) => {
-              const digit = i + 1;
-              let count = 0;
-              cells.forEach((row) =>
-                row.forEach((cell) => {
-                  if (cell.value === digit) {
-                    count += 1;
-                  }
-                }),
-              );
-              return { digit, count: 9 - count };
-            })}
-            onTapDigit={(digit) => {
-              setHighlightDigit((prev) => (prev === digit ? null : digit));
-            }}
-          />
-          <NotesLayers
-            eraseMode={eraseMode}
-            onToggleEraseMode={() => setEraseMode((prev) => !prev)}
-            layers={layers}
-            setLayers={(updater) => {
-              setLayers((prev) => updater(prev));
-            }}
-            highlightDigit={highlightDigit ?? undefined}
-            onStrokeWillBegin={() => {
-              pushHistory(cells, layers);
-            }}
-          />
-          <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
-            <BoardExport cells={cells} />
-          </div>
-          <div className="mt-1 text-[10px] text-white-500">
-            Built {new Date(__APP_BUILD_TIME__).toLocaleString()} ({__APP_COMMIT__})
+      <div className="flex w-full max-w-3xl landscape:max-w-5xl flex-col items-stretch gap-3">
+        <main className="flex flex-col gap-2 landscape:gap-3">
+          <div className="flex flex-col landscape:flex-row landscape:items-start gap-2 landscape:gap-3">
+            {/* Left column (landscape) / top+bottom sections (portrait) */}
+            <div className="flex flex-col items-center gap-2 landscape:flex-1 landscape:min-w-0">
+              <Controls
+                ref={controlsRef}
+                onNewPuzzle={handleNewPuzzle}
+                onHint={handleHint}
+                onDrawCandidates={handleDrawCandidates}
+                onResetApp={handleResetApp}
+                onUndo={() => {
+                  setHistory((prevHistory) => {
+                    if (prevHistory.length === 0) {
+                      return prevHistory;
+                    }
+                    const nextHistory = [...prevHistory];
+                    const previous = nextHistory.pop()!;
+                    setCells(previous.cells);
+                    setLayers(previous.layers);
+                    return nextHistory;
+                  });
+                }}
+                canUndo={history.length > 0}
+              />
+              {/* Board sits here in portrait (order-2 pushes it between Controls and the rest) */}
+              <div className="order-2 landscape:hidden flex justify-center">
+                <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
+                  <Board
+                    cells={cells}
+                    eraseMode={eraseMode}
+                    highlightDigit={highlightDigit ?? undefined}
+                    onChangeCell={handleChangeCell}
+                    onToggleCandidate={handleToggleCandidate}
+                    onRecognitionCandidates={(_row, _col, outcome) => {
+                      showCandidates(outcome);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="order-3 w-full flex flex-col items-center gap-2">
+                <DigitIndicatorRow
+                  digits={Array.from({ length: 9 }, (_, i) => {
+                    const digit = i + 1;
+                    let count = 0;
+                    cells.forEach((row) =>
+                      row.forEach((cell) => {
+                        if (cell.value === digit) {
+                          count += 1;
+                        }
+                      }),
+                    );
+                    return { digit, count: 9 - count };
+                  })}
+                  onTapDigit={(digit) => {
+                    setHighlightDigit((prev) => (prev === digit ? null : digit));
+                  }}
+                />
+                <NotesLayers
+                  eraseMode={eraseMode}
+                  onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+                  layers={layers}
+                  setLayers={(updater) => {
+                    setLayers((prev) => updater(prev));
+                  }}
+                  highlightDigit={highlightDigit ?? undefined}
+                  onStrokeWillBegin={() => {
+                    pushHistory(cells, layers);
+                  }}
+                />
+                <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
+                  <BoardExport cells={cells} />
+                </div>
+                <div className="mt-1 text-[10px] text-white-500">
+                  Built {new Date(__APP_BUILD_TIME__).toLocaleString()} ({__APP_COMMIT__})
+                </div>
+              </div>
+            </div>
+            {/* Right column — landscape only */}
+            <div className="hidden landscape:flex justify-center landscape:flex-shrink-0">
+              <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
+                <Board
+                  cells={cells}
+                  eraseMode={eraseMode}
+                  highlightDigit={highlightDigit ?? undefined}
+                  onChangeCell={handleChangeCell}
+                  onToggleCandidate={handleToggleCandidate}
+                  onRecognitionCandidates={(_row, _col, outcome) => {
+                    showCandidates(outcome);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </main>
       </div>

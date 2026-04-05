@@ -41,7 +41,7 @@ const CandidateGrid: React.FC<{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 'clamp(0.55rem, 2.8vw, 0.85rem)',
+            fontSize: 'clamp(0.55rem, min(2.8vw, 2.8vh), 0.85rem)',
             lineHeight: 1,
             color: isSet ? (isHighlighted ? '#fff' : '#334155') : 'transparent',
             backgroundColor: isHighlighted ? 'rgba(191, 77, 252, 0.75)' : 'transparent',
@@ -141,8 +141,9 @@ export class Cell extends React.Component<CellProps> {
     }
 
     const cellClassNames = [
-      'flex h-[10vw]',
-      'w-[10vw]',
+      'flex',
+      'h-[min(10vw,10vh,64px)]',
+      'w-[min(10vw,10vh,64px)]',
       'items-center',
       'justify-center',
       'bg-white',
