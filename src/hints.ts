@@ -250,7 +250,10 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
                 && cell !== pivot && cell !== pinB && cell !== pinC
                 && cell.candidates?.includes(r)
                 && seesCell(cell, pinB) && seesCell(cell, pinC)) {
-                return { cells: [pivot, pinB, pinC] };
+                return {
+                  cells: [pivot, pinB, pinC],
+                  extra: `Eliminate ${r} from ${cellPosition(cell)}`,
+                };
               }
             }
           }
