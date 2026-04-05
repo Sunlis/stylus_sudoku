@@ -47,10 +47,6 @@ export class InputPanel extends React.Component<Props, State> {
   }
 
   componentDidMount(): void {
-    this.canvasRef.current?.addEventListener(
-      'touchmove',
-      this.touchMove.bind(this),
-      { passive: false });
 
     const canvas = this.canvasRef.current;
     if (canvas && this.props.storageKey) {
@@ -78,9 +74,6 @@ export class InputPanel extends React.Component<Props, State> {
     }
   }
   componentWillUnmount(): void {
-    this.canvasRef.current?.removeEventListener(
-      'touchmove',
-      this.touchMove.bind(this));
   }
 
   private changeState(newState: InputState, extraState: Partial<State> = {}) {
@@ -89,7 +82,8 @@ export class InputPanel extends React.Component<Props, State> {
     });
   }
 
-  private touchStart(event: TouchEvent) {
+  private pointerStart(event: PointerEvent) {
+    (event.target as HTMLCanvasElement).setPointerCapture(event.pointerId);
     if (this.timeout) {
       window.clearTimeout(this.timeout);
     }
@@ -112,7 +106,7 @@ export class InputPanel extends React.Component<Props, State> {
     const ctx = canvas.getContext('2d')!;
     ctx.closePath();
     ctx.beginPath();
-    const pos = this.relativePosition(event as TouchEvent);
+    const pos = this.relativePosition(event);
     this.changeState(InputState.INPUT, {
       mouseDown: true,
       previousMouse: { x: pos.x, y: pos.y },
@@ -125,7 +119,8 @@ export class InputPanel extends React.Component<Props, State> {
     this.trace.addPoint(pos.x, pos.y);
   }
 
-  private touchEnd(event: TouchEvent) {
+  private pointerEnd(event: PointerEvent) {
+    if (!this.state.mouseDown && !this.state.startPosition) return;
     if (this.props.eraseMode) {
       return;
     }
@@ -159,17 +154,16 @@ export class InputPanel extends React.Component<Props, State> {
     }, userStorage.getRecognitionDelay());
   }
 
-  private touchMove(event: TouchEvent) {
+  private pointerMove(event: PointerEvent) {
     if (this.props.eraseMode) {
       return;
     }
-    if (!this.state.mouseDown) {
-      this.touchStart(event);
+    if (!this.state.mouseDown || event.buttons === 0) {
+      return;
     }
     if (this.timeout) {
       window.clearTimeout(this.timeout);
     }
-    event.preventDefault();
     const canvas = this.canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     const { x, y } = this.relativePosition(event);
@@ -256,14 +250,13 @@ export class InputPanel extends React.Component<Props, State> {
       });
   }
 
-  private relativePosition(event: TouchEvent) {
+  private relativePosition(event: PointerEvent) {
     const canvas = this.canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    // Calculate normalized position based on rendered size (10vw) and actual canvas resolution (this.props.size)
     const scaleX = this.props.canvasSize / rect.width;
     const scaleY = this.props.canvasSize / rect.height;
-    const x = (event.touches[0].clientX - rect.left) * scaleX;
-    const y = (event.touches[0].clientY - rect.top) * scaleY;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
     return { x, y };
   }
 
@@ -294,11 +287,17 @@ export class InputPanel extends React.Component<Props, State> {
         onContextMenu={(event) => {
           event.preventDefault();
         }}
-        onTouchStart={(event) => {
-          this.touchStart(event.nativeEvent);
+        onPointerDown={(event) => {
+          this.pointerStart(event.nativeEvent);
         }}
-        onTouchEnd={(event) => {
-          this.touchEnd(event.nativeEvent);
+        onPointerMove={(event) => {
+          this.pointerMove(event.nativeEvent);
+        }}
+        onPointerUp={(event) => {
+          this.pointerEnd(event.nativeEvent);
+        }}
+        onPointerCancel={(event) => {
+          this.pointerEnd(event.nativeEvent);
         }}
         width={this.props.canvasSize}
         height={this.props.canvasSize} />
