@@ -50,6 +50,7 @@ interface NotesLayersProps {
   onStrokeWillBegin: () => void;
   onLayerActivated?: () => void;
   highlightDigit?: number;
+  isLandscape?: boolean;
 }
 
 interface NotesLayersState {
@@ -215,6 +216,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
           activeLayerId={activeLayerId}
           eraseMode={eraseMode}
           highlightDigit={this.props.highlightDigit}
+          isLandscape={this.props.isLandscape}
           onStrokeWillBegin={onStrokeWillBegin}
           onBeginStroke={this.beginStroke}
           onContinueStroke={this.continueStroke}

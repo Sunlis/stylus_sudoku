@@ -42,6 +42,15 @@ function App() {
   const { candidates: recognitionCandidates, showCandidates } = useRecognitionToast();
   const [hintText, setHintText] = React.useState<string | null>(null);
   const hintTimeoutRef = React.useRef<number | null>(null);
+  const [isLandscape, setIsLandscape] = React.useState(
+    () => window.matchMedia('(orientation: landscape)').matches
+  );
+  React.useEffect(() => {
+    const mq = window.matchMedia('(orientation: landscape)');
+    const handler = (e: MediaQueryListEvent) => setIsLandscape(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const pushHistory = React.useCallback(
     (snapshotCells: SudokuBoard, snapshotLayers: NoteLayer[]) => {
@@ -173,9 +182,16 @@ function App() {
     <div className="min-h-screen flex items-start justify-center py-3 px-3">
       <div className="flex w-full max-w-3xl landscape:max-w-5xl flex-col items-stretch gap-3">
         <main className="flex flex-col gap-2 landscape:gap-3">
-          <div className="flex flex-col landscape:flex-row landscape:items-start gap-2 landscape:gap-3">
-            {/* Left column (landscape) / top+bottom sections (portrait) */}
-            <div className="flex flex-col items-center gap-2 landscape:flex-1 landscape:min-w-0">
+          <div
+            style={isLandscape
+              ? { display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'start', gap: 12 }
+              : { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}
+          >
+            {/* Left column: all controls/sidebar items grouped together */}
+            <div
+              className="w-full flex flex-col items-center gap-2"
+              style={isLandscape ? { gridColumn: 1, gridRow: 1 } : { display: 'contents' }}
+            >
               <Controls
                 ref={controlsRef}
                 onNewPuzzle={handleNewPuzzle}
@@ -196,8 +212,66 @@ function App() {
                 }}
                 canUndo={history.length > 0}
               />
-              {/* Board sits here in portrait (order-2 pushes it between Controls and the rest) */}
-              <div className="order-2 landscape:hidden flex justify-center">
+              {/* Board sits here in portrait (between controls and digit indicator) */}
+              {!isLandscape && (
+                <div className="flex justify-center">
+                  <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
+                    <Board
+                      cells={cells}
+                      eraseMode={eraseMode}
+                      highlightDigit={highlightDigit ?? undefined}
+                      onChangeCell={handleChangeCell}
+                      onToggleCandidate={handleToggleCandidate}
+                      onRecognitionCandidates={(_row, _col, outcome) => {
+                        showCandidates(outcome);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <DigitIndicatorRow
+                digits={Array.from({ length: 9 }, (_, i) => {
+                  const digit = i + 1;
+                  let count = 0;
+                  cells.forEach((row) =>
+                    row.forEach((cell) => {
+                      if (cell.value === digit) {
+                        count += 1;
+                      }
+                    }),
+                  );
+                  return { digit, count: 9 - count };
+                })}
+                onTapDigit={(digit) => {
+                  setHighlightDigit((prev) => (prev === digit ? null : digit));
+                }}
+              />
+              <NotesLayers
+                eraseMode={eraseMode}
+                onToggleEraseMode={() => setEraseMode((prev) => !prev)}
+                layers={layers}
+                setLayers={(updater) => {
+                  setLayers((prev) => updater(prev));
+                }}
+                highlightDigit={highlightDigit ?? undefined}
+                isLandscape={isLandscape}
+                onStrokeWillBegin={() => {
+                  pushHistory(cells, layers);
+                }}
+              />
+              <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
+                <BoardExport cells={cells} />
+              </div>
+              <div className="mt-1 text-center text-[10px] text-white-500">
+                Built {new Date(__APP_BUILD_TIME__).toLocaleString()} ({__APP_COMMIT__})
+              </div>
+            </div>
+            {/* Board in landscape: column 2, single row */}
+            {isLandscape && (
+              <div
+                className="flex justify-center"
+                style={{ gridColumn: 2, gridRow: 1 }}
+              >
                 <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
                   <Board
                     cells={cells}
@@ -211,59 +285,7 @@ function App() {
                   />
                 </div>
               </div>
-              <div className="order-3 w-full flex flex-col items-center gap-2">
-                <DigitIndicatorRow
-                  digits={Array.from({ length: 9 }, (_, i) => {
-                    const digit = i + 1;
-                    let count = 0;
-                    cells.forEach((row) =>
-                      row.forEach((cell) => {
-                        if (cell.value === digit) {
-                          count += 1;
-                        }
-                      }),
-                    );
-                    return { digit, count: 9 - count };
-                  })}
-                  onTapDigit={(digit) => {
-                    setHighlightDigit((prev) => (prev === digit ? null : digit));
-                  }}
-                />
-                <NotesLayers
-                  eraseMode={eraseMode}
-                  onToggleEraseMode={() => setEraseMode((prev) => !prev)}
-                  layers={layers}
-                  setLayers={(updater) => {
-                    setLayers((prev) => updater(prev));
-                  }}
-                  highlightDigit={highlightDigit ?? undefined}
-                  onStrokeWillBegin={() => {
-                    pushHistory(cells, layers);
-                  }}
-                />
-                <div className="w-full rounded-2xl bg-white/90 p-2 text-xs text-slate-800 shadow-sm ring-1 ring-slate-200">
-                  <BoardExport cells={cells} />
-                </div>
-                <div className="mt-1 text-[10px] text-white-500">
-                  Built {new Date(__APP_BUILD_TIME__).toLocaleString()} ({__APP_COMMIT__})
-                </div>
-              </div>
-            </div>
-            {/* Right column — landscape only */}
-            <div className="hidden landscape:flex justify-center landscape:flex-shrink-0">
-              <div className="rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200">
-                <Board
-                  cells={cells}
-                  eraseMode={eraseMode}
-                  highlightDigit={highlightDigit ?? undefined}
-                  onChangeCell={handleChangeCell}
-                  onToggleCandidate={handleToggleCandidate}
-                  onRecognitionCandidates={(_row, _col, outcome) => {
-                    showCandidates(outcome);
-                  }}
-                />
-              </div>
-            </div>
+            )}
           </div>
         </main>
       </div>

@@ -8,6 +8,7 @@ interface NotesLayersOverlayProps {
   activeLayerId: number | null;
   eraseMode: boolean;
   highlightDigit?: number;
+  isLandscape?: boolean;
   onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
@@ -22,24 +23,35 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
     boardRect: null,
   };
 
+  private resizeObserver: ResizeObserver | null = null;
+
   componentDidMount(): void {
     const boardEl = document.getElementById('sudoku-board-root');
     if (!boardEl) {
       return;
     }
-    const rect = boardEl.getBoundingClientRect();
-    this.setState({ boardRect: rect });
+    this.updateBoardRect();
 
-    window.addEventListener('resize', this.handleResize);
-    window.addEventListener('scroll', this.handleResize, { passive: true });
+    this.resizeObserver = new ResizeObserver(() => this.updateBoardRect());
+    this.resizeObserver.observe(boardEl);
+    window.addEventListener('scroll', this.updateBoardRect, { passive: true });
+  }
+
+  componentDidUpdate(prevProps: NotesLayersOverlayProps): void {
+    if (prevProps.isLandscape !== this.props.isLandscape) {
+      // Board moved in the layout — position changed without a resize.
+      // Use rAF so the browser has committed the new layout before we measure.
+      requestAnimationFrame(() => this.updateBoardRect());
+    }
   }
 
   componentWillUnmount(): void {
-    window.removeEventListener('resize', this.handleResize);
-    window.removeEventListener('scroll', this.handleResize);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    window.removeEventListener('scroll', this.updateBoardRect);
   }
 
-  handleResize = (): void => {
+  updateBoardRect = (): void => {
     const boardEl = document.getElementById('sudoku-board-root');
     if (!boardEl) {
       return;
