@@ -274,6 +274,7 @@ function App() {
                 }}
                 highlightDigit={highlightDigit ?? undefined}
                 isLandscape={isLandscape}
+                hintVisible={hintText !== null}
                 onStrokeWillBegin={() => {
                   pushHistory(cells, layers);
                 }}

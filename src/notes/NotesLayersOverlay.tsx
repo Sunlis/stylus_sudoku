@@ -9,6 +9,7 @@ interface NotesLayersOverlayProps {
   eraseMode: boolean;
   highlightDigit?: number;
   isLandscape?: boolean;
+  hintVisible?: boolean;
   onStrokeWillBegin: () => void;
   onBeginStroke: (point: Point, erase: boolean) => void;
   onContinueStroke: (point: Point, erase: boolean) => void;
@@ -38,7 +39,8 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
   }
 
   componentDidUpdate(prevProps: NotesLayersOverlayProps): void {
-    if (prevProps.isLandscape !== this.props.isLandscape) {
+    if (prevProps.isLandscape !== this.props.isLandscape ||
+      prevProps.hintVisible !== this.props.hintVisible) {
       // Board moved in the layout — position changed without a resize.
       // Use rAF so the browser has committed the new layout before we measure.
       requestAnimationFrame(() => this.updateBoardRect());
