@@ -1,6 +1,6 @@
 import { getSudoku } from 'sudoku-gen';
 
-import { Difficulty } from '@app/types';
+import { Difficulty } from '@app/types/difficulty';
 import { Board, createBoard } from '@app/types/board';
 import { isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
 

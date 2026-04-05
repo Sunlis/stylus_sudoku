@@ -4,7 +4,7 @@ import { Board } from '@app/board/board';
 import { BoardExport } from '@app/board_export';
 import { Controls } from '@app/controls';
 import { NotesLayers } from '@app/notes/NotesLayers';
-import { Difficulty } from '@app/types';
+import { Difficulty } from '@app/types/difficulty';
 import { userStorage } from '@app/storage';
 import { clearRelatedCandidates, fillCandidates, isBoardValid } from '@app/sudoku';
 import { createBoard, type Board as SudokuBoard, type Cell as SudokuCell } from '@app/types/board';

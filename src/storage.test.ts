@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createBoard, type Board } from '@app/types/board';
+import { Difficulty } from '@app/types/difficulty';
 import type { Trace } from '@app/handwriting';
 
 const createMockLocalStorage = () => {
@@ -47,7 +48,7 @@ describe('UserStorage preferences', () => {
   it('persists and retrieves difficulty and recognition delay', async () => {
     const userStorage = await freshUserStorage();
 
-    userStorage.setDifficulty('expert');
+    userStorage.setDifficulty(Difficulty.Expert);
     userStorage.setRecognitionDelay(2000);
 
     const secondInstance = await freshUserStorage();

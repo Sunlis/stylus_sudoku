@@ -1,4 +1,4 @@
-import { Difficulty } from "./types";
+import { Difficulty } from "./types/difficulty";
 import type { Board } from "@app/types/board";
 import type { Trace } from "./handwriting";
 
@@ -11,7 +11,7 @@ interface UserPreferences {
 }
 
 const defaultPreferences: UserPreferences = {
-  difficulty: 'medium',
+  difficulty: Difficulty.Medium,
   recognitionDelay: 1000,
 };
 

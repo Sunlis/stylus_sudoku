@@ -4,7 +4,7 @@ import gridIcon from '../static/grid.svg';
 import questionIcon from '../static/question.svg';
 import undoIcon from '../static/undo.svg';
 import overflowIcon from '../static/overflow.svg';
-import { DIFFICULTIES, DIFFICULTY_LABELS, Difficulty } from './types';
+import { DIFFICULTIES, DIFFICULTY_LABELS, Difficulty } from './types/difficulty';
 import { userStorage } from './storage';
 import { DANGER_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
 

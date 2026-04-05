@@ -26,19 +26,6 @@ body.notes-mode::before {
   z-index: 9999;
 }
 
-body.candidate-mode {
-  background-color: #7f1d1d;
-}
-
-body.candidate-mode::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  box-shadow: 0 0 0 6px #dc2626 inset;
-  z-index: 9999;
-}
-
 #root {
   max-height: 90vh;
 }
@@ -74,20 +61,4 @@ body.candidate-mode::before {
   .sudoku-cell {
     font-size: 2.4rem;
   }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-    display: inline-block;
-  }
-
-  to {
-    opacity: 0;
-    display: none;
-  }
-}
-
-.fade-out {
-  animation: fadeOut 5s ease-in-out 1s forwards;
 }

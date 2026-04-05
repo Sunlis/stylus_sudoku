@@ -5,6 +5,7 @@ import { getSudoku } from 'sudoku-gen';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { fillCandidates } from '@app/sudoku';
 import { createBoard, type Board } from '@app/types/board';
+import { Difficulty } from '@app/types/difficulty';
 
 vi.mock('sudoku-gen', () => ({
   getSudoku: vi.fn(() => ({
@@ -53,9 +54,9 @@ describe('getNewBoard', () => {
   });
 
   it('passes the difficulty level through to getSudoku', () => {
-    getNewBoard('expert');
+    getNewBoard(Difficulty.Expert);
 
-    expect(getSudoku).toHaveBeenCalledWith('expert');
+    expect(getSudoku).toHaveBeenCalledWith(Difficulty.Expert);
   });
 });
 
