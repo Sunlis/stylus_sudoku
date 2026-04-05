@@ -13,7 +13,7 @@ import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
 import { RecognitionToast } from '@app/RecognitionToast';
-import { getHint } from '@app/hints';
+import { getHint, MoveStrategy } from '@app/hints';
 import { VictoryDialog } from './victory';
 import { DigitIndicatorRow } from './game/digit_indicator';
 
@@ -156,8 +156,8 @@ function App() {
     setHintText(null);
     setTimeout(() => {
       try {
-        const { description } = getHint(cells);
-        console.log('Hint:', description);
+        const { strategy, description, result } = getHint(cells);
+        console.log(MoveStrategy[strategy], description, result);
         setHintText(description);
         hintTimeoutRef.current = window.setTimeout(() => {
           setHintText(null);

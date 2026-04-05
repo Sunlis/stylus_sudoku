@@ -117,6 +117,19 @@ describe('HIDDEN_PAIR', () => {
     ]);
     expect(check(board)).toBeNull();
   });
+
+  it('does not trigger when the two paired cells contain only those two candidates (naked pair, not hidden)', () => {
+    // Column has 4 unsolved cells; two share [2,7] and two share [3,9].
+    // Candidates 2 and 7 appear in exactly the same two cells, but those cells have no
+    // extra candidates to eliminate — this is a naked pair, not a hidden pair.
+    const board = solvedExcept([
+      { row: 0, col: 0, candidates: [2, 7] },
+      { row: 1, col: 0, candidates: [2, 7] },
+      { row: 2, col: 0, candidates: [3, 9] },
+      { row: 3, col: 0, candidates: [3, 9] },
+    ]);
+    expect(check(board)).toBeNull();
+  });
 });
 
 describe('NAKED_TRIPLE', () => {

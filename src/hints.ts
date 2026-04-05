@@ -94,7 +94,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
   // Check for any pair of cells in a group that have only the same two candidates,
   // where at least one other cell in the group contains one of those candidates.
   [MoveStrategy.NAKED_PAIR]: (cells) => {
-    return forEachGroup(cells, (group) => {
+    return forEachGroup(cells, (group, type, index) => {
       const pairCells = group.filter(
         (cell) => cell.value === undefined && cell.candidates?.length === 2,
       );
@@ -114,7 +114,10 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
               (cell.candidates?.includes(c1) || cell.candidates?.includes(c2)),
           );
           if (hasElimination) {
-            return { cells: [pairCells[i], pairCells[j]] };
+            return {
+              cells: [pairCells[i], pairCells[j]],
+              extra: `${GROUP_NAME[type]} ${index + 1}`
+            };
           }
         }
       }
@@ -122,7 +125,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
   },
   // Check for any pair of candidates in a group that are only present in the same two cells.
   [MoveStrategy.HIDDEN_PAIR]: (cells) => {
-    return forEachGroup(cells, (group) => {
+    return forEachGroup(cells, (group, type, index) => {
       const candidatesMap: Record<number, Cell[]> = {};
       for (const cell of group) {
         if (cell.value !== undefined) continue;
@@ -141,7 +144,14 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           const a = pairCandidates[i];
           const b = pairCandidates[j];
           if (a[0] === b[0] && a[1] === b[1]) {
-            return { cells: a };
+            // Only actionable if at least one paired cell has extra candidates to eliminate
+            const hasElimination = a[0].candidates!.length > 2 || a[1].candidates!.length > 2;
+            if (hasElimination) {
+              return {
+                cells: a,
+                extra: `${GROUP_NAME[type]} ${index + 1}`,
+              };
+            }
           }
         }
       }
@@ -149,7 +159,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
   },
   // Check for three cells in a group whose combined candidates form exactly three digits.
   [MoveStrategy.NAKED_TRIPLE]: (board) => {
-    return forEachGroup(board, (group) => {
+    return forEachGroup(board, (group, type, index) => {
       const unsolved = group.filter(
         (cell) => cell.value === undefined && (cell.candidates?.length ?? 0) >= 2 && (cell.candidates?.length ?? 0) <= 3,
       );
@@ -167,7 +177,10 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
               if (!triple.includes(cell)
                 && cell.value === undefined
                 && cell.candidates?.some((c) => union.has(c))) {
-                return { cells: triple };
+                return {
+                  cells: triple,
+                  extra: `${GROUP_NAME[type]} ${index + 1}`
+                };
               }
             }
           }
@@ -177,7 +190,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
   },
   // Check for three candidates in a group that only appear in the same three cells.
   [MoveStrategy.HIDDEN_TRIPLE]: (board) => {
-    return forEachGroup(board, (group) => {
+    return forEachGroup(board, (group, type, index) => {
       const candidatesMap: Record<number, Cell[]> = {};
       for (const cell of group) {
         if (cell.value !== undefined) continue;
@@ -198,7 +211,10 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
             for (const cell of unionCells) {
               for (const c of cell.candidates!) {
                 if (!hiddenSet.has(c)) {
-                  return { cells: [...unionCells] };
+                  return {
+                    cells: [...unionCells],
+                    extra: `${GROUP_NAME[type]} ${index + 1}`
+                  };
                 }
               }
             }
