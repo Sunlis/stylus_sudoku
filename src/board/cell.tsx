@@ -24,6 +24,7 @@ const CandidateGrid: React.FC<{
     style={{
       position: 'absolute',
       inset: 0,
+      padding: '6px 3px 2px 3px',
       display: 'grid',
       gridTemplateColumns: 'repeat(3, 1fr)',
       gridTemplateRows: 'repeat(3, 1fr)',

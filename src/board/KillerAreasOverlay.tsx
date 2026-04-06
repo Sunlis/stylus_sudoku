@@ -173,7 +173,7 @@ export class KillerAreasOverlay extends React.Component<Props> {
 
     // Draw each area's sum in the top-left corner of its top-leftmost cell
     ctx.setLineDash([]);
-    const fontSize = Math.round(approxCellW * 0.22);
+    const fontSize = Math.round(approxCellW * 0.18);
     ctx.font = `bold ${fontSize}px sans-serif`;
 
     killerAreas.forEach((area) => {
@@ -189,16 +189,17 @@ export class KillerAreasOverlay extends React.Component<Props> {
       const y = cy0 + cellHeight * 0.28;
       const label = String(area.sum);
       const metrics = ctx.measureText(label);
-      const pad = 4;
-      ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+      const pad = 2;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fillRect(
-        x - pad,
-        y - fontSize - pad,
+        x - pad - 3,
+        y - fontSize - pad - 9,
         metrics.width + pad * 2,
         fontSize + pad,
       );
-      ctx.fillStyle = 'rgba(50, 50, 50, 0.85)';
-      ctx.fillText(label, x, y - pad);
+      ctx.fillStyle = '#000';
+      ctx.font = `normal ${fontSize}px sans-serif`;
+      ctx.fillText(label, x - 3, y - pad - 11);
     });
   }
 
