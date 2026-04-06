@@ -4,6 +4,14 @@ import { Difficulty } from '@app/types/difficulty';
 import { Board, KillerArea, createBoard } from '@app/types/board';
 import { isRowValid, isColumnValid, isBoxValid, isKillerAreaValid, createKillerAreas } from '@app/sudoku';
 
+// Fraction of pre-filled clues to remove when killer mode is active.
+const KILLER_REMOVAL_RATE: Record<Difficulty, number> = {
+  [Difficulty.Easy]: 0.3,
+  [Difficulty.Medium]: 0.45,
+  [Difficulty.Hard]: 0.6,
+  [Difficulty.Expert]: 0.75,
+};
+
 export const getNewBoard = (d: Difficulty, killerMode: boolean = false): Board => {
   const { puzzle, solution } = getSudoku(d);
 
@@ -15,10 +23,33 @@ export const getNewBoard = (d: Difficulty, killerMode: boolean = false): Board =
     killerAreas = createKillerAreas(solutionBoard);
   }
 
+  // Collect the indices of pre-filled clue cells.
+  const clueIndices: number[] = [];
+  for (let i = 0; i < 81; i++) {
+    if (!isNaN(parseInt(puzzle[i]))) {
+      clueIndices.push(i);
+    }
+  }
+
+  // In killer mode, randomly blank out a difficulty-scaled fraction of clues.
+  const removedIndices = new Set<number>();
+  if (killerMode) {
+    const rate = KILLER_REMOVAL_RATE[d];
+    const removeCount = Math.round(clueIndices.length * rate);
+    const shuffled = clueIndices.slice().sort(() => Math.random() - 0.5);
+    for (let i = 0; i < removeCount; i++) {
+      removedIndices.add(shuffled[i]);
+    }
+  }
+
   return createBoard((row, col) => {
     const index = (row * 9) + col;
     let value: number | undefined = parseInt(puzzle[index]);
     value = isNaN(value) ? undefined : value;
+
+    if (removedIndices.has(index)) {
+      value = undefined;
+    }
 
     return {
       value: value,
