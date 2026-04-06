@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import { boxIndex, clearRelatedCandidates, fillCandidates, forEachCell, forEachGroup, isBoardValid, isBoxValid, isColumnValid, isRowValid } from '@app/sudoku';
+import { boxIndex, clearRelatedCandidates, createKillerAreas, fillCandidates, forEachCell, forEachGroup, isBoardValid, isBoxValid, isColumnValid, isRowValid } from '@app/sudoku';
 import { createBoard, type Board, type CellContents } from '@app/types/board';
 
 function emptyCell(): CellContents {
@@ -220,26 +220,26 @@ describe('fillCandidates and clearRelatedCandidates', () => {
     const withCandidates = fillCandidates(board);
 
     // a peer cell in same row should not have 1 or 2 as candidates
-    const sameRowCell = withCandidates[0][2];
+    const sameRowCell = withCandidates.grid[0][2];
     expect(sameRowCell.candidates).toBeDefined();
     expect(sameRowCell.candidates).not.toContain(1);
     expect(sameRowCell.candidates).not.toContain(2);
 
     // a peer cell in same column should not have 1 or 3 as candidates
-    const sameColCell = withCandidates[2][0];
+    const sameColCell = withCandidates.grid[2][0];
     expect(sameColCell.candidates).toBeDefined();
     expect(sameColCell.candidates).not.toContain(1);
     expect(sameColCell.candidates).not.toContain(3);
 
     // a cell in same box but different row/col should not have 1,2,3
-    const sameBoxCell = withCandidates[1][1];
+    const sameBoxCell = withCandidates.grid[1][1];
     expect(sameBoxCell.candidates).toBeDefined();
     expect(sameBoxCell.candidates).not.toContain(1);
     expect(sameBoxCell.candidates).not.toContain(2);
     expect(sameBoxCell.candidates).not.toContain(3);
 
     // a cell in a different box should still have all candidates
-    const otherBoxCell = withCandidates[4][4];
+    const otherBoxCell = withCandidates.grid[4][4];
     expect(otherBoxCell.candidates).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
@@ -248,6 +248,95 @@ describe('fillCandidates and clearRelatedCandidates', () => {
 
     const result = clearRelatedCandidates(board, 0, 0);
 
-    expect(result[1][1].candidates).toEqual([1, 2, 3]);
+    expect(result.grid[1][1].candidates).toEqual([1, 2, 3]);
+  });
+});
+
+describe('createKillerAreas', () => {
+  const SOLVED_VALUES: number[][] = [
+    [5, 3, 4, 6, 7, 8, 9, 1, 2],
+    [6, 7, 2, 1, 9, 5, 3, 4, 8],
+    [1, 9, 8, 3, 4, 2, 5, 6, 7],
+    [8, 5, 9, 7, 6, 1, 4, 2, 3],
+    [4, 2, 6, 8, 5, 3, 7, 9, 1],
+    [7, 1, 3, 9, 2, 4, 8, 5, 6],
+    [9, 6, 1, 5, 3, 7, 2, 8, 4],
+    [2, 8, 7, 4, 1, 9, 6, 3, 5],
+    [3, 4, 5, 2, 8, 6, 1, 7, 9],
+  ];
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('covers all 81 cells exactly once', () => {
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+    const positions = areas.flatMap(a => a.cells).map(c => `${c.row},${c.col}`);
+
+    expect(positions).toHaveLength(81);
+    expect(new Set(positions).size).toBe(81);
+  });
+
+  it('includes cells that have values (given clues)', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(1); // singletons for simplicity
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+
+    // Every cell should appear — including given-clue cells with values
+    const positions = new Set(areas.flatMap(a => a.cells).map(c => `${c.row},${c.col}`));
+    expect(positions.size).toBe(81);
+  });
+
+  it('computes the sum from true solution values', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(1); // singletons so each area = 1 cell
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+
+    for (const area of areas) {
+      const cell = area.cells[0];
+      expect(area.sum).toBe(SOLVED_VALUES[cell.row][cell.col]);
+    }
+  });
+
+  it('never exceeds 6 cells per group (with Math.random always expanding)', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+
+    for (const area of areas) {
+      expect(area.cells.length).toBeLessThanOrEqual(6);
+    }
+  });
+
+  it('produces 81 singleton groups when Math.random never expands', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(1); // 1 < 0.5 is false → no expansion
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+
+    expect(areas).toHaveLength(81);
+    for (const area of areas) {
+      expect(area.cells).toHaveLength(1);
+    }
+  });
+
+  it('produces only contiguous groups (each cell adjacent to at least one peer)', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const solution = boardFromValues(SOLVED_VALUES);
+    const areas = createKillerAreas(solution);
+
+    for (const area of areas) {
+      if (area.cells.length === 1) {
+        continue;
+      }
+      for (const cell of area.cells) {
+        const hasAdjacentPeer = area.cells.some(
+          other =>
+            (Math.abs(other.row - cell.row) === 1 && other.col === cell.col) ||
+            (other.row === cell.row && Math.abs(other.col - cell.col) === 1),
+        );
+        expect(hasAdjacentPeer).toBe(true);
+      }
+    }
   });
 });

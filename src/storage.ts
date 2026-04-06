@@ -5,6 +5,7 @@ import type { Trace } from "./handwriting";
 interface UserPreferences {
   difficulty: Difficulty;
   recognitionDelay: number;
+  killerMode: boolean;
   boardState?: Board;
   notesLayers?: unknown;
   handwritingStrokes?: Record<string, Trace>;
@@ -13,6 +14,7 @@ interface UserPreferences {
 const defaultPreferences: UserPreferences = {
   difficulty: Difficulty.Medium,
   recognitionDelay: 1000,
+  killerMode: false,
 };
 
 class UserStorage {
@@ -51,6 +53,15 @@ class UserStorage {
     this.setPreferences();
   }
 
+  getKillerMode(): boolean {
+    return this.preferences.killerMode;
+  }
+
+  setKillerMode(killerMode: boolean) {
+    this.preferences.killerMode = killerMode;
+    this.setPreferences();
+  }
+
   getRecognitionDelay(): number {
     return this.preferences.recognitionDelay;
   }
@@ -61,7 +72,11 @@ class UserStorage {
   }
 
   getBoardState(): Board | null {
-    return this.preferences.boardState ?? null;
+    const state = this.preferences.boardState;
+    if (!state || !Array.isArray((state as any).grid)) {
+      return null;
+    }
+    return state;
   }
 
   setBoardState(cells: Board): void {

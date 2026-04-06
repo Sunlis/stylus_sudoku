@@ -9,7 +9,7 @@ import { userStorage } from './storage';
 import { DANGER_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
 
 interface ControlsProps {
-  onNewPuzzle: (difficulty: Difficulty) => void;
+  onNewPuzzle: (difficulty: Difficulty, killerMode: boolean) => void;
   onHint: () => void;
   onUndo: () => void;
   canUndo: boolean;
@@ -20,6 +20,7 @@ interface ControlsProps {
 
 interface ControlsState {
   difficulty: Difficulty;
+  killerMode: boolean;
   showDialog: boolean;
 }
 
@@ -31,6 +32,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
     super(props);
     this.state = {
       difficulty: userStorage.getDifficulty(),
+      killerMode: userStorage.getKillerMode(),
       showDialog: false,
     };
   }
@@ -136,10 +138,23 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
                 </option>
               ))}
             </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#1e293b', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={this.state.killerMode}
+                onChange={(e) => {
+                  const killerMode = e.target.checked;
+                  this.setState({ killerMode });
+                  userStorage.setKillerMode(killerMode);
+                }}
+                style={{ width: '1rem', height: '1rem', cursor: 'pointer' }}
+              />
+              Killer mode
+            </label>
             <Button
               className={PRIMARY_BUTTON}
               onClick={() => {
-                this.props.onNewPuzzle(this.state.difficulty);
+                this.props.onNewPuzzle(this.state.difficulty, this.state.killerMode);
                 this.dialogRef.current?.close();
               }}
               color="primary"

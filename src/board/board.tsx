@@ -36,7 +36,7 @@ export class Board extends React.Component<BoardProps, BoardState> {
           }}
         >
           {
-            this.props.cells.map((group: Group, rowIndex) => {
+            this.props.cells.grid.map((group: Group, rowIndex) => {
               return (<div key={rowIndex} className="flex flex-row">
                 {
                   group.map((cell: SudokuCell, colIndex) => {

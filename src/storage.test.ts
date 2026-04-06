@@ -88,8 +88,8 @@ describe('UserStorage board state', () => {
     const stored = secondInstance.getBoardState();
 
     expect(stored).not.toBeNull();
-    expect(stored![0][0].value).toBe(1);
-    expect(stored![0][1].value).toBe(2);
+    expect(stored!.grid[0][0].value).toBe(1);
+    expect(stored!.grid[0][1].value).toBe(2);
   });
 });
 

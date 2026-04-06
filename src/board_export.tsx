@@ -13,7 +13,7 @@ export class BoardExport extends React.Component<ExportProps> {
     for (let i = 0; i < 81; i++) {
       const row = Math.floor(i / 9);
       const col = i % 9;
-      const cell = this.props.cells[row][col];
+      const cell = this.props.cells.grid[row][col];
       if (cell.value !== undefined) {
         boardString += cell.value.toString();
       } else {

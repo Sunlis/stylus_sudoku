@@ -1,11 +1,19 @@
 import { getSudoku } from 'sudoku-gen';
 
 import { Difficulty } from '@app/types/difficulty';
-import { Board, createBoard } from '@app/types/board';
-import { isRowValid, isColumnValid, isBoxValid } from '@app/sudoku';
+import { Board, KillerArea, createBoard } from '@app/types/board';
+import { isRowValid, isColumnValid, isBoxValid, createKillerAreas } from '@app/sudoku';
 
-export const getNewBoard = (d: Difficulty): Board => {
-  const { puzzle } = getSudoku(d);
+export const getNewBoard = (d: Difficulty, killerMode: boolean = false): Board => {
+  const { puzzle, solution } = getSudoku(d);
+
+  let killerAreas: KillerArea[] = [];
+  if (killerMode) {
+    const solutionBoard = createBoard((row, col) => ({
+      value: parseInt(solution[(row * 9) + col]),
+    }));
+    killerAreas = createKillerAreas(solutionBoard);
+  }
 
   return createBoard((row, col) => {
     const index = (row * 9) + col;
@@ -16,7 +24,7 @@ export const getNewBoard = (d: Difficulty): Board => {
       value: value,
       user: !value,
     };
-  });
+  }, killerAreas);
 };
 
 const isCellPositionValid = (board: Board, row: number, col: number): boolean => {
@@ -41,8 +49,8 @@ export const recomputeValidity = (board: Board): Board => {
   return createBoard((row, col) => {
     const isValid = isCellPositionValid(board, row, col);
     return {
-      ...board[row][col],
+      ...board.grid[row][col],
       valid: isValid ? undefined : false,
     };
-  });
+  }, board.killerAreas);
 };

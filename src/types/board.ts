@@ -12,18 +12,28 @@ export interface CellPosition {
 
 export type Cell = CellContents & CellPosition;
 
-export type Board = Cell[][];
-
 export type Group = Cell[];
+
+export type KillerArea = {
+  cells: CellPosition[];
+  sum: number;
+};
+
+export type Board = {
+  grid: Cell[][];
+  killerAreas: KillerArea[];
+};
 
 export function createBoard(
   createContents: (row: number, col: number) => CellContents = () => ({}),
+  killerAreas: KillerArea[] = [],
 ): Board {
-  return Array.from({ length: 9 }, (_, row) =>
+  const grid = Array.from({ length: 9 }, (_, row) =>
     Array.from({ length: 9 }, (_, col) => ({
       ...createContents(row, col),
       row,
       col,
     })),
   );
+  return { grid, killerAreas };
 }

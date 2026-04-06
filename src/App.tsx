@@ -78,7 +78,7 @@ function App() {
   }, []);
 
   const handleToggleCandidate = (row: number, col: number, num: number) => {
-    const cell = cells[row][col];
+    const cell = cells.grid[row][col];
     const prev = cell.candidates ?? [];
     const next = prev.includes(num)
       ? prev.filter((c) => c !== num)
@@ -87,8 +87,8 @@ function App() {
       if (r === row && c === col) {
         return { ...cell, candidates: next };
       }
-      return cells[r][c];
-    });
+      return cells.grid[r][c];
+    }, cells.killerAreas);
     pushHistory(cells, layers);
     setCells(nextCells);
   };
@@ -96,13 +96,13 @@ function App() {
   const handleDrawCandidates = () => {
     pushHistory(cells, layers);
     const filled = fillCandidates(
-      createBoard((row, col) => ({ ...cells[row][col], candidates: undefined })),
+      createBoard((row, col) => ({ ...cells.grid[row][col], candidates: undefined }), cells.killerAreas),
     );
     setCells(
       createBoard((row, col) => ({
-        ...cells[row][col],
-        candidates: filled[row][col].candidates,
-      })),
+        ...cells.grid[row][col],
+        candidates: filled.grid[row][col].candidates,
+      }), cells.killerAreas),
     );
   };
 
@@ -116,8 +116,8 @@ function App() {
       if (nextRow === row && nextCol === col) {
         return cellToStore;
       }
-      return cells[nextRow][nextCol];
-    });
+      return cells.grid[nextRow][nextCol];
+    }, cells.killerAreas);
 
     const cellsAfterCandidates =
       cellToStore.user && cellToStore.value !== undefined
@@ -128,7 +128,7 @@ function App() {
     const validated = recomputeValidity(cellsAfterCandidates);
     setCells(validated);
 
-    const allFilled = validated.every((rowArr) =>
+    const allFilled = validated.grid.every((rowArr) =>
       rowArr.every((cell) => cell.value !== undefined),
     );
     if (allFilled && isBoardValid(validated)) {
@@ -136,10 +136,10 @@ function App() {
     }
   };
 
-  const handleNewPuzzle = (difficulty: Difficulty) => {
+  const handleNewPuzzle = (difficulty: Difficulty, killerMode: boolean = false) => {
     setCells((prevCells) => {
       pushHistory(prevCells, layers);
-      return getNewBoard(difficulty);
+      return getNewBoard(difficulty, killerMode);
     });
 
     setLayers((prevLayers) =>
@@ -192,7 +192,7 @@ function App() {
                 onDrawCandidates={handleDrawCandidates}
                 onResetApp={handleResetApp}
                 onCopyDebug={() => {
-                  const overrides = cells.flatMap((row) =>
+                  const overrides = cells.grid.flatMap((row) =>
                     row.flatMap((cell) => {
                       if (cell.value !== undefined) return [];
                       return [{
@@ -256,7 +256,7 @@ function App() {
                 digits={Array.from({ length: 9 }, (_, i) => {
                   const digit = i + 1;
                   let count = 0;
-                  cells.forEach((row) =>
+                  cells.grid.forEach((row) =>
                     row.forEach((cell) => {
                       if (cell.value === digit) {
                         count += 1;

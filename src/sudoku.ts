@@ -1,4 +1,4 @@
-import { Board, Cell, Group } from "@app/types/board";
+import { Board, Cell, CellPosition, Group, KillerArea } from "@app/types/board";
 
 export enum GroupType {
   ROW,
@@ -15,7 +15,7 @@ export function forEachGroup<T>(
   callback: (group: Group, type: GroupType, index: number) => T | void): T | void {
   // Rows
   for (let row = 0; row < 9; row++) {
-    const rowGroup = board[row];
+    const rowGroup = board.grid[row];
     const result = callback(rowGroup, GroupType.ROW, row);
     if (result !== undefined) {
       return result;
@@ -26,7 +26,7 @@ export function forEachGroup<T>(
   for (let col = 0; col < 9; col++) {
     const colGroup = [];
     for (let row = 0; row < 9; row++) {
-      colGroup.push(board[row][col]);
+      colGroup.push(board.grid[row][col]);
     }
     const result = callback(colGroup, GroupType.COLUMN, col);
     if (result !== undefined) {
@@ -40,7 +40,7 @@ export function forEachGroup<T>(
       const boxGroup = [];
       for (let row = boxRow * 3; row < boxRow * 3 + 3; row++) {
         for (let col = boxCol * 3; col < boxCol * 3 + 3; col++) {
-          boxGroup.push(board[row][col]);
+          boxGroup.push(board.grid[row][col]);
         }
       }
       const result = callback(boxGroup, GroupType.BOX, boxRow * 3 + boxCol);
@@ -56,7 +56,7 @@ export function forEachCell<T>(
   callback: (cell: Cell, row: number, col: number, index: number) => T | void): T | void {
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
-      const result = callback(board[row][col], row, col, (row * 9) + col);
+      const result = callback(board.grid[row][col], row, col, (row * 9) + col);
       if (result !== undefined) {
         return result;
       }
@@ -90,7 +90,7 @@ export function isBoardValid(board: Board): boolean {
 export function isRowValid(board: Board, row: number): boolean {
   const seen = new Set<number>();
   for (let col = 0; col < 9; col++) {
-    const value = board[row][col].value;
+    const value = board.grid[row][col].value;
     if (value !== undefined) {
       if (seen.has(value)) {
         return false;
@@ -104,7 +104,7 @@ export function isRowValid(board: Board, row: number): boolean {
 export function isColumnValid(board: Board, col: number): boolean {
   const seen = new Set<number>();
   for (let row = 0; row < 9; row++) {
-    const value = board[row][col].value;
+    const value = board.grid[row][col].value;
     if (value !== undefined) {
       if (seen.has(value)) {
         return false;
@@ -119,7 +119,7 @@ export function isBoxValid(board: Board, boxRow: number, boxCol: number): boolea
   const seen = new Set<number>();
   for (let row = boxRow * 3; row < boxRow * 3 + 3; row++) {
     for (let col = boxCol * 3; col < boxCol * 3 + 3; col++) {
-      const value = board[row][col].value;
+      const value = board.grid[row][col].value;
       if (value !== undefined) {
         if (seen.has(value)) {
           return false;
@@ -143,7 +143,7 @@ function fillAllCandidates(board: Board): Board {
 
 // Clear the given cell's number from all relevant candidates.
 export function clearRelatedCandidates(board: Board, cellRow: number, cellCol: number): Board {
-  const value = board[cellRow][cellCol].value;
+  const value = board.grid[cellRow][cellCol].value;
   if (value === undefined) {
     return board;
   }
@@ -164,10 +164,58 @@ export function fillCandidates(board: Board): Board {
   const newBoard: Board = fillAllCandidates(board);
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
-      if (newBoard[row][col].value !== undefined) {
+      if (newBoard.grid[row][col].value !== undefined) {
         clearRelatedCandidates(newBoard, row, col);
       }
     }
   }
   return newBoard;
 }
+
+/**
+ * Break a board up into "killer" areas - connected groups of cells that all
+ * sum to a certain value.
+ *
+ * @param solution - A fully solved board whose `value` fields supply each
+ *   cell's true digit.  All 81 cells are grouped (including cells that are
+ *   blank in the playable puzzle).
+ */
+export function createKillerAreas(solution: Board): KillerArea[] {
+  const out = [];
+  const open = new Set<Cell>();
+  forEachCell(solution, (cell) => {
+    open.add(cell);
+  });
+
+  while (open.size > 0) {
+    const [start] = open;
+    const cells = [start];
+    open.delete(start);
+
+    // Do a DFS to find all connected cells.
+    const stack = [start];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+
+      // Check the 4 orthogonal neighbors.
+      const neighbors = [
+        solution.grid[current.row - 1]?.[current.col],
+        solution.grid[current.row + 1]?.[current.col],
+        solution.grid[current.row]?.[current.col - 1],
+        solution.grid[current.row]?.[current.col + 1],
+      ];
+      for (const neighbor of neighbors) {
+        if (neighbor && open.has(neighbor) && cells.length < 6 && Math.random() < 0.5) {
+          open.delete(neighbor);
+          stack.push(neighbor);
+          cells.push(neighbor);
+        }
+      }
+    }  // while (stack.length > 0)
+
+    const sum = cells.reduce((acc, c) => acc + (solution.grid[c.row][c.col].value ?? 0), 0);
+    out.push({ cells, sum });
+  }
+
+  return out;
+};

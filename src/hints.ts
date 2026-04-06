@@ -238,8 +238,8 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
         const boxCells: Cell[] = [];
         for (let r = boxRow * 3; r < boxRow * 3 + 3; r++) {
           for (let c = boxCol * 3; c < boxCol * 3 + 3; c++) {
-            if (board[r][c].value === undefined) {
-              boxCells.push(board[r][c]);
+            if (board.grid[r][c].value === undefined) {
+              boxCells.push(board.grid[r][c]);
             }
           }
         }
@@ -258,7 +258,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           const cols = [...new Set(cells.map((c) => c.col))];
           if (rows.length === 1) {
             // All in the same row — can eliminate from rest of that row outside this box
-            const victims = board[rows[0]].filter(
+            const victims = board.grid[rows[0]].filter(
               (c) => c.value === undefined &&
                 Math.floor(c.col / 3) !== boxCol &&
                 c.candidates?.includes(cand),
@@ -272,7 +272,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           }
           if (cols.length === 1) {
             // All in the same column — can eliminate from rest of that column outside this box
-            const victims = board.map((row) => row[cols[0]]).filter(
+            const victims = board.grid.map((row) => row[cols[0]]).filter(
               (c) => c.value === undefined &&
                 Math.floor(c.row / 3) !== boxRow &&
                 c.candidates?.includes(cand),
@@ -289,7 +289,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
     }
     // Type 2: box-line reduction
     for (let r = 0; r < 9; r++) {
-      const rowCells = board[r].filter((c) => c.value === undefined);
+      const rowCells = board.grid[r].filter((c) => c.value === undefined);
       const candidatesInRow: Record<number, Cell[]> = {};
       for (const cell of rowCells) {
         for (const cand of cell.candidates ?? []) {
@@ -308,7 +308,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           const victims: Cell[] = [];
           for (let br = boxRow * 3; br < boxRow * 3 + 3; br++) {
             if (br === r) continue;
-            const c = board[br].filter(
+            const c = board.grid[br].filter(
               (cell) => cell.value === undefined &&
                 Math.floor(cell.col / 3) === boxCol &&
                 cell.candidates?.includes(cand),
@@ -325,7 +325,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
       }
     }
     for (let c = 0; c < 9; c++) {
-      const colCells = board.map((row) => row[c]).filter((cell) => cell.value === undefined);
+      const colCells = board.grid.map((row) => row[c]).filter((cell) => cell.value === undefined);
       const candidatesInCol: Record<number, Cell[]> = {};
       for (const cell of colCells) {
         for (const cand of cell.candidates ?? []) {
@@ -344,7 +344,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           const victims: Cell[] = [];
           for (let bc = boxCol * 3; bc < boxCol * 3 + 3; bc++) {
             if (bc === c) continue;
-            const v = board.map((row) => row[bc]).filter(
+            const v = board.grid.map((row) => row[bc]).filter(
               (cell) => cell.value === undefined &&
                 Math.floor(cell.row / 3) === boxRow &&
                 cell.candidates?.includes(cand),
@@ -365,7 +365,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
   // Check for a pivot cell linking two pincers that share a candidate to eliminate.
   [MoveStrategy.Y_WING]: (board) => {
     const bivalue: Cell[] = [];
-    for (const row of board) {
+    for (const row of board.grid) {
       for (const cell of row) {
         if (cell.value === undefined && cell.candidates?.length === 2) {
           bivalue.push(cell);
@@ -386,7 +386,7 @@ export const STRATEGY_CHECKS: Record<MoveStrategy, (cells: Board) => null | Stra
           // into locked candidates and is not a true Y-wing.
           if (seesCell(pinB, pinC)) continue;
           // Valid Y-wing: find a victim that sees both pincers and holds r
-          for (const row of board) {
+          for (const row of board.grid) {
             for (const cell of row) {
               if (cell.value === undefined
                 && cell !== pivot && cell !== pinB && cell !== pinC
