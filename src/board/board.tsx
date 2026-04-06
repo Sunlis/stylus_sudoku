@@ -2,6 +2,7 @@ import React from "react";
 
 import type { Board as SudokuBoard, Cell as SudokuCell, Group } from "@app/types/board";
 import { Cell } from "@app/board/cell";
+import { KillerAreasOverlay } from "@app/board/KillerAreasOverlay";
 import type { RecognitionOutcome } from "@app/handwriting";
 
 interface BoardProps {
@@ -30,11 +31,15 @@ export class Board extends React.Component<BoardProps, BoardState> {
         <div
           className="border-2 border-slate-900/90"
           style={{
+            position: 'relative',
             borderLeft: 'none',
             borderTop: 'none',
             boxSizing: 'border-box',
           }}
         >
+          {this.props.cells.killerAreas.length > 0 && (
+            <KillerAreasOverlay killerAreas={this.props.cells.killerAreas} />
+          )}
           {
             this.props.cells.grid.map((group: Group, rowIndex) => {
               return (<div key={rowIndex} className="flex flex-row">

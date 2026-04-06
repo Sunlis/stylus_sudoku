@@ -34,6 +34,11 @@ export default defineConfig({
   },
   server: {
     host: true,
+    allowedHosts: [
+      'localhost',
+      'seans-macbook-air.local',
+      '127.0.0.1',
+    ]
   },
   test: {
     environment: 'jsdom',
