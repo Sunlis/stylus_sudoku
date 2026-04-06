@@ -19,3 +19,17 @@ Object.defineProperty(window, 'matchMedia', {
   unobserve() { }
   disconnect() { }
 };
+
+// jsdom does not implement PointerEvent; extend MouseEvent with pointer-specific fields.
+if (typeof PointerEvent === 'undefined') {
+  class PointerEvent extends MouseEvent {
+    public pointerId: number;
+    public pointerType: string;
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 0;
+      this.pointerType = params.pointerType ?? 'mouse';
+    }
+  }
+  (globalThis as any).PointerEvent = PointerEvent;
+}
