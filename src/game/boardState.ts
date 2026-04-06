@@ -2,7 +2,7 @@ import { getSudoku } from 'sudoku-gen';
 
 import { Difficulty } from '@app/types/difficulty';
 import { Board, KillerArea, createBoard } from '@app/types/board';
-import { isRowValid, isColumnValid, isBoxValid, createKillerAreas } from '@app/sudoku';
+import { isRowValid, isColumnValid, isBoxValid, isKillerAreaValid, createKillerAreas } from '@app/sudoku';
 
 export const getNewBoard = (d: Difficulty, killerMode: boolean = false): Board => {
   const { puzzle, solution } = getSudoku(d);
@@ -39,6 +39,15 @@ const isCellPositionValid = (board: Board, row: number, col: number): boolean =>
   }
   if (!isBoxValid(board, boxRow, boxCol)) {
     return false;
+  }
+
+  for (const area of board.killerAreas) {
+    if (area.cells.some((c) => c.row === row && c.col === col)) {
+      if (!isKillerAreaValid(board, area)) {
+        return false;
+      }
+      break;
+    }
   }
 
   return true;

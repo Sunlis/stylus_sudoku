@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import { boxIndex, clearRelatedCandidates, createKillerAreas, fillCandidates, forEachCell, forEachGroup, isBoardValid, isBoxValid, isColumnValid, isRowValid } from '@app/sudoku';
+import { boxIndex, clearRelatedCandidates, createKillerAreas, fillCandidates, forEachCell, forEachGroup, isBoardValid, isBoxValid, isColumnValid, isKillerAreaValid, isRowValid } from '@app/sudoku';
 import { createBoard, type Board, type CellContents } from '@app/types/board';
 
 function emptyCell(): CellContents {
@@ -338,5 +338,49 @@ describe('createKillerAreas', () => {
         expect(hasAdjacentPeer).toBe(true);
       }
     }
+  });
+});
+
+describe('isKillerAreaValid', () => {
+  const area = { cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }], sum: 9 };
+
+  it('returns true when cells are empty', () => {
+    const board = createBoard(() => ({}), [area]);
+    expect(isKillerAreaValid(board, area)).toBe(true);
+  });
+
+  it('returns true when partial sum is below target', () => {
+    const board = createBoard((row, col) => {
+      if (row === 0 && col === 0) { return { value: 4 }; }
+      return {};
+    }, [area]);
+    expect(isKillerAreaValid(board, area)).toBe(true);
+  });
+
+  it('returns false when partial sum exceeds target', () => {
+    const board = createBoard((row, col) => {
+      if (row === 0 && col === 0) { return { value: 7 }; }
+      if (row === 0 && col === 1) { return { value: 5 }; }
+      return {};
+    }, [area]);
+    expect(isKillerAreaValid(board, area)).toBe(false);
+  });
+
+  it('returns true when all cells filled and sum matches target', () => {
+    const board = createBoard((row, col) => {
+      if (row === 0 && col === 0) { return { value: 4 }; }
+      if (row === 0 && col === 1) { return { value: 5 }; }
+      return {};
+    }, [area]);
+    expect(isKillerAreaValid(board, area)).toBe(true);
+  });
+
+  it('returns false when all cells filled but sum is wrong', () => {
+    const board = createBoard((row, col) => {
+      if (row === 0 && col === 0) { return { value: 3 }; }
+      if (row === 0 && col === 1) { return { value: 4 }; }
+      return {};
+    }, [area]);
+    expect(isKillerAreaValid(board, area)).toBe(false);
   });
 });

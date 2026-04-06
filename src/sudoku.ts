@@ -131,7 +131,30 @@ export function isBoxValid(board: Board, boxRow: number, boxCol: number): boolea
   return true;
 }
 
-// Just naively fill all empty cells with all 9 numbers.
+/**
+ * Returns false if the killer area's filled values sum to more than the target,
+ * or if all cells are filled and the sum doesn't equal the target.
+ */
+export function isKillerAreaValid(board: Board, area: KillerArea): boolean {
+  let sum = 0;
+  let allFilled = true;
+  for (const { row, col } of area.cells) {
+    const value = board.grid[row][col].value;
+    if (value === undefined) {
+      allFilled = false;
+    } else {
+      sum += value;
+    }
+  }
+  if (sum > area.sum) {
+    return false;
+  }
+  if (allFilled && sum !== area.sum) {
+    return false;
+  }
+  return true;
+}
+
 function fillAllCandidates(board: Board): Board {
   forEachCell(board, (cell, row, col) => {
     if (cell.value === undefined) {
