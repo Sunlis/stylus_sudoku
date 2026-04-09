@@ -265,6 +265,7 @@ function App() {
                   );
                   return { digit, count: 9 - count };
                 })}
+                selectedDigit={highlightDigit}
                 onTapDigit={(digit) => {
                   setHighlightDigit((prev) => (prev === digit ? null : digit));
                 }}

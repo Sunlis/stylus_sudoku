@@ -59,24 +59,13 @@ export class DigitIndicator extends React.Component<DigitProps, {}> {
 
 type DigitRowProps = {
   digits: Digit[];
+  selectedDigit?: number | null;
   onTapDigit?: (digit: number) => void;
 };
 
-type DigitState = {
-  selected: number;
-};
-
-export class DigitIndicatorRow extends React.Component<DigitRowProps, DigitState> {
-
-  constructor(props: DigitRowProps) {
-    super(props);
-    this.state = {
-      selected: 0,
-    };
-  }
+export class DigitIndicatorRow extends React.Component<DigitRowProps> {
 
   handleTapDigit(digit: number) {
-    this.setState((prev) => ({ selected: prev.selected === digit ? 0 : digit }));
     if (this.props.onTapDigit) {
       this.props.onTapDigit(digit);
     }
@@ -94,7 +83,7 @@ export class DigitIndicatorRow extends React.Component<DigitRowProps, DigitState
           <DigitIndicator
             key={props.digit}
             {...props}
-            selected={this.state.selected === props.digit}
+            selected={this.props.selectedDigit === props.digit}
             onClick={() => this.handleTapDigit(props.digit)}
           />
         ))}
