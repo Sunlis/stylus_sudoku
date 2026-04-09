@@ -3,13 +3,17 @@ import React from 'react';
 import { NoteLayer, Point } from '@app/types/notes';
 
 const COLORS = [
-  '#ff0000',
-  '#008000',
-  '#0000ff',
-  '#ffa500',
+  '#ff0000',    // red
+  '#00ff00',    // green
+  '#0000ff',    // blue
+  '#ff8800',    // orange
+  '#8000ff',    // purple
+  '#0088ff',    // cyan
+  '#ff0088',    // magenta
+  '#00ff88',    // spring green
 ];
 
-const STROKE_WIDTH = 4;
+const STROKE_WIDTH = 2;
 const ERASER_WIDTH = 12;
 
 interface LayerCanvasProps {
