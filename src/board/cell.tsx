@@ -45,7 +45,7 @@ const CandidateGrid: React.FC<{
             fontSize: 'clamp(0.55rem, min(2.8vw, 2.8vh), 0.85rem)',
             lineHeight: 1,
             color: isSet ? (isHighlighted ? '#fff' : '#334155') : 'transparent',
-            backgroundColor: isHighlighted ? 'rgba(191, 77, 252, 0.75)' : 'transparent',
+            backgroundColor: isHighlighted ? '#000' : 'transparent',
             borderRadius: '6px',
             cursor: interactive ? 'pointer' : 'default',
             userSelect: 'none',
@@ -77,6 +77,14 @@ export class Cell extends React.Component<CellProps> {
         width: '100%',
         height: '100%',
       }}>
+        {showCandidateGrid && (
+          <CandidateGrid
+            candidates={this.props.candidates}
+            interactive={false}
+            highlightDigit={this.props.highlightDigit}
+          />
+        )}
+        {interior}
         <InputPanel
           anchor={{ x: 0, y: 0 }}
           canvasSize={100}
@@ -98,14 +106,6 @@ export class Cell extends React.Component<CellProps> {
             this.props.onToggleCandidate?.(num);
           }}
         />
-        {interior}
-        {showCandidateGrid && (
-          <CandidateGrid
-            candidates={this.props.candidates}
-            interactive={false}
-            highlightDigit={this.props.highlightDigit}
-          />
-        )}
       </div>;
     }
     let color = '#000000';
