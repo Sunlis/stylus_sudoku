@@ -1,5 +1,5 @@
 const BUTTON_BASE = [
-  'rounded-lg', 'border', 'px-4', 'py-2', 'text-sm', 'font-medium',
+  'w-full', 'rounded-lg', 'border', 'px-4', 'py-2', 'text-sm', 'font-medium',
   'shadow-[0_2px_4px_rgba(15,23,42,0.85)]', 'hover:bg-opacity-90', 'mt-1'
 ];
 
