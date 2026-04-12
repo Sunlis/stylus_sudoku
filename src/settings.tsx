@@ -70,7 +70,7 @@ export class SettingsDialog extends React.Component<SettingsProps, SettingsState
     return (
       <dialog ref={this.ref} style={{
         ...DIALOG_STYLE,
-        bottom: '-25vh',
+        bottom: '-20vh',
         top: 'unset',
       }}>
         <div style={{
@@ -81,7 +81,7 @@ export class SettingsDialog extends React.Component<SettingsProps, SettingsState
           <h1>Settings</h1>
           <div style={{
             overflowY: 'scroll',
-            maxHeight: '40vh',
+            maxHeight: '30vh',
           }}>
             {
               COLOR_SETTINGS.map(({ label, themeKey }, index, arr) => (
