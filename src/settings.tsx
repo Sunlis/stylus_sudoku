@@ -11,7 +11,7 @@ interface SettingsState {
 }
 
 export class SettingsDialog extends React.Component<SettingsProps, SettingsState> {
-  ref: React.RefObject<HTMLDialogElement> = React.createRef();
+  ref: React.RefObject<HTMLDialogElement | null> = React.createRef();
 
   constructor(props: SettingsProps) {
     super(props);
@@ -54,7 +54,7 @@ interface SettingsButtonProps {
 }
 
 export class SettingsButton extends React.Component<SettingsButtonProps> {
-  dialogRef: React.RefObject<SettingsDialog> = React.createRef();
+  dialogRef: React.RefObject<SettingsDialog | null> = React.createRef();
 
   render() {
     return (
@@ -65,7 +65,6 @@ export class SettingsButton extends React.Component<SettingsButtonProps> {
       }}>
         <Button
           className={SECONDARY_BUTTON}
-          color="primary"
           onPress={() => {
             this.props.onPress();
             broadcast(Signal.SHOW_SETTINGS);

@@ -64,7 +64,7 @@ export class NotesLayersOverlay extends React.Component<NotesLayersOverlayProps,
     this.setState({ boardRect: rect });
   };
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     const { layers, activeLayerId, eraseMode, highlightDigit, onStrokeWillBegin, onBeginStroke, onContinueStroke } = this.props;
     const { boardRect } = this.state;
 

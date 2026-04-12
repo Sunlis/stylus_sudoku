@@ -203,7 +203,7 @@ export class KillerAreasOverlay extends React.Component<Props> {
     });
   }
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     return (
       <canvas
         ref={this.canvasRef}

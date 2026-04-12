@@ -206,7 +206,7 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
     }));
   };
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     const { eraseMode, layers, onStrokeWillBegin } = this.props;
     const { activeLayerId } = this.state;
 
@@ -227,9 +227,8 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
           <div className="flex items-center justify-between">
             <Button
               size="sm"
-              color="primary"
               className="rounded-lg border border-slate-900 bg-slate-900 px-3 py-1 text-xs font-medium text-white shadow-[0_2px_4px_rgba(15,23,42,0.85)] hover:bg-slate-800"
-              onClick={this.addLayer}
+              onPress={this.addLayer}
             >
               <span className="flex items-center gap-1">
                 <img src={plusIcon} alt="" className="h-3.5 w-3.5" />
@@ -278,10 +277,10 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="bordered"
+                  variant="outline"
                   aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
                   className={LAYER_BUTTON_VISIBILITY_CLASS}
-                  onClick={() => this.toggleVisibility(layer.id)}
+                  onPress={() => this.toggleVisibility(layer.id)}
                 >
                   <img
                     src={layer.visible ? visibleIcon : hiddenIcon}
@@ -292,10 +291,10 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="bordered"
+                  variant="outline"
                   aria-label={activeLayerId === layer.id ? 'Active layer' : 'Activate layer'}
                   className={isActiveRow ? LAYER_BUTTON_ACTIVE_ON_CLASS : LAYER_BUTTON_ACTIVE_CLASS}
-                  onClick={() => this.toggleActive(layer.id)}
+                  onPress={() => this.toggleActive(layer.id)}
                 >
                   <img
                     src={crosshairIcon}
@@ -307,10 +306,10 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="bordered"
+                  variant="outline"
                   aria-label="Change layer color"
                   className={LAYER_BUTTON_COLOR_CLASS}
-                  onClick={() => this.cycleColor(layer.id)}
+                  onPress={() => this.cycleColor(layer.id)}
                 >
                   <img
                     src={paletteIcon}
@@ -321,10 +320,10 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                 <Button
                   isIconOnly
                   size="sm"
-                  variant="bordered"
+                  variant="outline"
                   aria-label="Clear layer drawings"
                   className={LAYER_BUTTON_COLOR_CLASS}
-                  onClick={() => this.clearLayer(layer.id)}
+                  onPress={() => this.clearLayer(layer.id)}
                 >
                   <img
                     src={eraserIcon}
@@ -336,11 +335,10 @@ export class NotesLayers extends React.Component<NotesLayersProps, NotesLayersSt
                   <Button
                     isIconOnly
                     size="sm"
-                    color="danger"
-                    variant="light"
+                    variant="ghost"
                     aria-label="Remove layer"
                     className={LAYER_BUTTON_REMOVE_CLASS}
-                    onClick={() => this.removeLayer(layer.id)}
+                    onPress={() => this.removeLayer(layer.id)}
                   >
                     <img
                       src={trashIcon}

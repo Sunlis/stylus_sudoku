@@ -255,7 +255,7 @@ export class LayerCanvas extends React.Component<LayerCanvasProps, LayerCanvasSt
     this.setState({ isDrawing: false, isErasing: false, eraserPosition: null });
   };
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     const { isActive } = this.props;
     const { eraserPosition, isErasing } = this.state;
 

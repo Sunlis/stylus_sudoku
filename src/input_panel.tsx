@@ -31,7 +31,7 @@ interface State {
 }
 
 export class InputPanel extends React.Component<Props, State> {
-  canvasRef: React.RefObject<HTMLCanvasElement> = React.createRef();
+  canvasRef: React.RefObject<HTMLCanvasElement | null> = React.createRef();
   trace: TraceBuilder = new TraceBuilder();
   timeout?: number;
 

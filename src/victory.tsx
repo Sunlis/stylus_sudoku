@@ -16,7 +16,7 @@ export class VictoryDialog extends React.Component<VictoryProps, {}> {
     this.ref.current?.close();
   }
 
-  render(): JSX.Element {
+  render(): React.JSX.Element {
     return (
       <dialog
         ref={this.ref}
