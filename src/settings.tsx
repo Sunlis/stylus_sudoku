@@ -1,7 +1,8 @@
-import { Button } from "@heroui/react";
+import { Button, ColorArea, ColorPicker, ColorSlider, ColorSwatch, Label } from "@heroui/react";
 import React from "react";
 import { DIALOG_STYLE, PRIMARY_BUTTON, SECONDARY_BUTTON } from "./style";
 import { broadcast, Signal, subscribe } from "./signals";
+import { ColorSelect } from "./settings/color_picker";
 
 interface SettingsProps {
   onOpenChange?: (open: boolean) => void;
@@ -40,9 +41,31 @@ export class SettingsDialog extends React.Component<SettingsProps, SettingsState
           display: 'flex',
           flexDirection: 'column',
         }}>
-          <h2>Settings</h2>
+          <h1>Settings</h1>
           <div>
+            <h2>Pre-filled cell border</h2>
+            <ColorSelect defaultValue="rgba(33, 21, 4, 0.2)" onChange={(color) => {
+              console.log('color changed', color);
+            }} />
           </div>
+          <hr />
+          <div>
+            <h2>User-filled cell border</h2>
+            <ColorSelect defaultValue="rgba(72, 150, 134, 0.3)" onChange={(color) => {
+              console.log('color changed', color);
+            }} />
+          </div>
+          <Button
+            className={PRIMARY_BUTTON}
+            style={{
+              marginTop: '2rem',
+            }}
+            onPress={() => {
+              this.hide();
+            }}
+          >
+            Close
+          </Button>
         </div>
       </dialog>
     );

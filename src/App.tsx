@@ -16,6 +16,7 @@ import { RecognitionToast } from '@app/RecognitionToast';
 import { getHint, MoveStrategy } from '@app/hints';
 import { VictoryDialog } from './victory';
 import { DigitIndicatorRow } from './game/digit_indicator';
+import { broadcast, Signal } from './signals';
 
 function App() {
   const controlsRef = React.useRef<Controls | null>(null);
@@ -75,6 +76,10 @@ function App() {
 
   React.useEffect(() => {
     document.title = 'Stylus Sudoku';
+  }, []);
+
+  React.useEffect(() => {
+    broadcast(Signal.SHOW_SETTINGS);
   }, []);
 
   const handleToggleCandidate = (row: number, col: number, num: number) => {
