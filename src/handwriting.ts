@@ -1,3 +1,4 @@
+import { recognizeLocal } from './local_recognizer';
 
 export type Stroke = [number[], number[]];
 export type Trace = Stroke[];
@@ -45,7 +46,6 @@ export type RecognitionOutcome = {
   localCandidates?: string[];
   remoteCandidates?: string[];
 };
-import { recognizeLocal } from './local_recognizer';
 
 function buildOutcomeFromCandidates(results: string[]): RecognitionOutcome {
   let input: Input = { special: SpecialInput.UNKONWN };
