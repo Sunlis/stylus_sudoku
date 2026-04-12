@@ -6,7 +6,8 @@ import undoIcon from '../static/undo.svg';
 import overflowIcon from '../static/overflow.svg';
 import { DIFFICULTIES, DIFFICULTY_LABELS, Difficulty } from './types/difficulty';
 import { userStorage } from './storage';
-import { DANGER_BUTTON, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
+import { DANGER_BUTTON, DIALOG_STYLE, PRIMARY_BUTTON, SECONDARY_BUTTON } from './style';
+import { SettingsButton, SettingsDialog } from './settings';
 
 interface ControlsProps {
   onNewPuzzle: (difficulty: Difficulty, killerMode: boolean) => void;
@@ -175,18 +176,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
         </dialog>
         <dialog
           ref={this.overflowDialogRef}
-          style={{
-            border: 'none',
-            borderRadius: '0.75rem',
-            padding: 0,
-            boxShadow: '0 16px 40px rgba(15, 23, 42, 0.35)',
-            maxWidth: '420px',
-            width: '90vw',
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
+          style={DIALOG_STYLE}
         >
           <div style={{
             display: 'flex',
@@ -217,6 +207,9 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             >
               Copy board as test fixture
             </Button>
+            <SettingsButton onPress={() => {
+              this.overflowDialogRef.current?.close();
+            }} />
             <Button
               className={DANGER_BUTTON}
               variant="bordered"
@@ -238,6 +231,7 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             </Button>
           </div>
         </dialog>
+        <SettingsDialog />
       </div>
     );
   }

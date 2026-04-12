@@ -15,3 +15,16 @@ export const DANGER_BUTTON = [
   ...BUTTON_BASE, 'border-red-500', 'bg-red-50', 'text-red-700',
   'hover:bg-red-100'
 ].join(' ');
+
+export const DIALOG_STYLE = {
+  border: 'none',
+  borderRadius: '0.75rem',
+  padding: 0,
+  boxShadow: '0 16px 40px rgba(15, 23, 42, 0.35)',
+  maxWidth: '420px',
+  width: '90vw',
+  position: 'fixed',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+} as const;
