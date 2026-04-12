@@ -37,15 +37,15 @@ const STRATEGIES: MoveStrategy[] = [
 ];
 
 const STRATEGY_MAP: Record<MoveStrategy, string> = {
-  [MoveStrategy.UNKNOWN]: "No hints available.",
-  [MoveStrategy.SINGLE_CANDIDATE]: "A cell contains only one candidate.",
-  [MoveStrategy.LONE_CANDIDATE]: "Group has only one valid position for a candidate.",
-  [MoveStrategy.NAKED_PAIR]: "A pair of cells in a group have only the same two candidates.",
-  [MoveStrategy.HIDDEN_PAIR]: "A pair of candidates in a group are only present in the same two cells.",
-  [MoveStrategy.NAKED_TRIPLE]: "Three cells in a group share only the same three candidates.",
-  [MoveStrategy.HIDDEN_TRIPLE]: "Three candidates in a group are confined to the same three cells.",
-  [MoveStrategy.LOCKED_CANDIDATES]: "A candidate is locked within a box's row or column.",
-  [MoveStrategy.Y_WING]: "A pivot cell with two pincers allows elimination of a shared candidate.",
+  [MoveStrategy.UNKNOWN]: "UNKNOWN",
+  [MoveStrategy.SINGLE_CANDIDATE]: "SINGLE_CANDIDATE",
+  [MoveStrategy.LONE_CANDIDATE]: "LONE_CANDIDATE",
+  [MoveStrategy.NAKED_PAIR]: "NAKED_PAIR",
+  [MoveStrategy.HIDDEN_PAIR]: "HIDDEN_PAIR",
+  [MoveStrategy.NAKED_TRIPLE]: "NAKED_TRIPLE",
+  [MoveStrategy.HIDDEN_TRIPLE]: "HIDDEN_TRIPLE",
+  [MoveStrategy.LOCKED_CANDIDATES]: "LOCKED_CANDIDATES",
+  [MoveStrategy.Y_WING]: "Y_WING",
 };
 
 const GROUP_NAME = {

@@ -352,6 +352,6 @@ describe('getHint – integration', () => {
     const hint = getHint(board);
     expect(hint.strategy).toBe(MoveStrategy.UNKNOWN);
     expect(hint.result.cells).toHaveLength(0);
-    expect(hint.description).toBe('No hints available.');
+    expect(hint.description).toBe('UNKNOWN');
   });
 });
