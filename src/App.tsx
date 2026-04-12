@@ -78,10 +78,6 @@ function App() {
     document.title = 'Stylus Sudoku';
   }, []);
 
-  React.useEffect(() => {
-    broadcast(Signal.SHOW_SETTINGS);
-  }, []);
-
   const handleToggleCandidate = (row: number, col: number, num: number) => {
     const cell = cells.grid[row][col];
     const prev = cell.candidates ?? [];
