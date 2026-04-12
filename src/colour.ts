@@ -1,3 +1,10 @@
+export type Color = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
 export type Rgb = {
   r: number;
   g: number;
@@ -59,3 +66,47 @@ export const getLayerRowColors = (baseHex: string) => {
     backgroundRgb: desaturated,
   };
 };
+
+export function parseColor(input: string): Color | null {
+  if (input.startsWith('#')) {
+    const hex = input.slice(1);
+    if (hex.length === 6) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return { r, g, b, a: 1 };
+    } else if (hex.length === 8) {
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const a = parseInt(hex.slice(6, 8), 16) / 255;
+      return { r, g, b, a };
+    }
+  } else if (input.startsWith('rgba(') && input.endsWith(')')) {
+    const parts = input.slice(5, -1).split(',').map(s => s.trim());
+    if (parts.length === 4) {
+      const r = parseInt(parts[0]);
+      const g = parseInt(parts[1]);
+      const b = parseInt(parts[2]);
+      const a = parseFloat(parts[3]);
+      return { r, g, b, a };
+    }
+  } else if (input.startsWith('rgb(') && input.endsWith(')')) {
+    const parts = input.slice(4, -1).split(',').map(s => s.trim());
+    if (parts.length === 3) {
+      const r = parseInt(parts[0]);
+      const g = parseInt(parts[1]);
+      const b = parseInt(parts[2]);
+      return { r, g, b, a: 1 };
+    }
+  }
+  return null;
+}
+
+export function colorToString(color: Color): string {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+}
+
+export function stripAlpha(color: Color): Color {
+  return { r: color.r, g: color.g, b: color.b, a: 1 };
+}

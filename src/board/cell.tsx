@@ -3,6 +3,10 @@ import React from "react";
 import { InputPanel } from "@app/input_panel";
 import type { Cell as SudokuCell } from "@app/types/board";
 import type { RecognitionOutcome } from "@app/handwriting";
+import { userStorage } from "../storage";
+import { Signal, subscribe } from "../signals";
+import { colorToString } from "../colour";
+import { throttle } from "../util";
 
 export interface CellProps extends SudokuCell {
   setNumber?: (num: number | null) => void;
@@ -58,7 +62,16 @@ const CandidateGrid: React.FC<{
   </div>
 );
 
-export class Cell extends React.Component<CellProps> {
+export class Cell extends React.Component<CellProps, { inc: number; }> {
+  constructor(props: CellProps) {
+    super(props);
+    this.state = {
+      inc: 0,
+    };
+    subscribe(Signal.UPDATE_THEME, throttle(() => {
+      this.setState({ inc: this.state.inc + 1 });
+    }, 100));
+  }
   render() {
     let interior = <div></div>;
     if (this.props.value !== undefined) {
@@ -119,26 +132,28 @@ export class Cell extends React.Component<CellProps> {
     if (this.props.row % 3 === 0) {
       borderTop = 2;
     }
+    const theme = userStorage.getTheme();
     if (this.props.value !== undefined) {
       if (this.props.user) {
-        border = 'rgba(72, 150, 134, 0.3)';
+        border = colorToString(theme.userCellBackground);
       } else {
-        border = 'rgba(33, 21, 4, 0.2)';
+        border = colorToString(theme.fixedCellBackground);
       }
+      color = colorToString(theme.cellTextColor);
     } else {
-      color = '#444';
+      color = colorToString(theme.candidateTextColor);
     }
 
     if (this.props.highlightDigit && this.props.value === this.props.highlightDigit) {
       if (this.props.user) {
-        bg = 'rgba(191, 77, 252, 0.75)';
+        bg = colorToString(theme.userHighlightBackground);
       } else {
-        bg = 'rgba(248, 224, 129, 0.7)';
+        bg = colorToString(theme.fixedHighlightBackground);
       }
     }
 
     if (this.props.valid === false) {
-      bg = 'rgba(255, 100, 100, 0.5)';
+      bg = colorToString(theme.invalidCellBackground);
     }
 
     const cellClassNames = [

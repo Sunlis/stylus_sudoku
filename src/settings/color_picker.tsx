@@ -1,55 +1,5 @@
 import React from "react";
-
-type Color = {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-};
-
-function parseColor(input: string): Color | null {
-  if (input.startsWith('#')) {
-    const hex = input.slice(1);
-    if (hex.length === 6) {
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      return { r, g, b, a: 1 };
-    } else if (hex.length === 8) {
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      const a = parseInt(hex.slice(6, 8), 16) / 255;
-      return { r, g, b, a };
-    }
-  } else if (input.startsWith('rgba(') && input.endsWith(')')) {
-    const parts = input.slice(5, -1).split(',').map(s => s.trim());
-    if (parts.length === 4) {
-      const r = parseInt(parts[0]);
-      const g = parseInt(parts[1]);
-      const b = parseInt(parts[2]);
-      const a = parseFloat(parts[3]);
-      return { r, g, b, a };
-    }
-  } else if (input.startsWith('rgb(') && input.endsWith(')')) {
-    const parts = input.slice(4, -1).split(',').map(s => s.trim());
-    if (parts.length === 3) {
-      const r = parseInt(parts[0]);
-      const g = parseInt(parts[1]);
-      const b = parseInt(parts[2]);
-      return { r, g, b, a: 1 };
-    }
-  }
-  return null;
-}
-
-function colorToString(color: Color): string {
-  return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-}
-
-function stripAlpha(color: Color): Color {
-  return { r: color.r, g: color.g, b: color.b, a: 1 };
-}
+import { Color, colorToString, parseColor, stripAlpha } from "../colour";
 
 interface ColorPreviewProps {
   color: Color;
@@ -82,7 +32,7 @@ export class ColorPreview extends React.Component<ColorPreviewProps> {
 
 interface ColorSelectProps {
   defaultValue: Color | string;
-  onChange?: (str: string, color: Color) => void;
+  onChange?: (color: Color) => void;
 }
 
 interface ColorSelectState {
@@ -138,15 +88,11 @@ export class ColorSelect extends React.Component<ColorSelectProps, ColorSelectSt
             defaultValue={colorToString(stripAlpha(this.defaultValue))}
             onChange={(event) => {
               const color = parseColor(event.target.value) ?? this.state.value;
+              color.a = this.state.value.a;
               this.setState({
-                value: {
-                  r: color.r,
-                  g: color.g,
-                  b: color.b,
-                  a: this.state.value.a,
-                }
+                value: color,
               });
-              this.props.onChange?.(colorToString(color), color);
+              this.props.onChange?.(color);
             }} />
         </div>
         <div style={{
@@ -164,12 +110,14 @@ export class ColorSelect extends React.Component<ColorSelectProps, ColorSelectSt
             max="1"
             step="0.01"
             onChange={(event) => {
+              const color = {
+                ...this.state.value,
+                a: parseFloat(event.target.value),
+              };
               this.setState({
-                value: {
-                  ...this.state.value,
-                  a: parseFloat(event.target.value),
-                }
+                value: color,
               });
+              this.props.onChange?.(color);
             }}
             defaultValue={this.state.value.a} />
         </div>

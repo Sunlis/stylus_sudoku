@@ -1,6 +1,18 @@
 import { Difficulty } from "./types/difficulty";
 import type { Board } from "@app/types/board";
 import type { Trace } from "./handwriting";
+import { broadcast, Signal } from "./signals";
+import { Color } from "./colour";
+
+export interface Theme {
+  fixedCellBackground: Color;
+  userCellBackground: Color;
+  fixedHighlightBackground: Color;
+  userHighlightBackground: Color;
+  invalidCellBackground: Color;
+  cellTextColor: Color;
+  candidateTextColor: Color;
+}
 
 interface UserPreferences {
   difficulty: Difficulty;
@@ -9,12 +21,22 @@ interface UserPreferences {
   boardState?: Board;
   notesLayers?: unknown;
   handwritingStrokes?: Record<string, Trace>;
+  theme: Theme;
 }
 
 const defaultPreferences: UserPreferences = {
   difficulty: Difficulty.Medium,
   recognitionDelay: 1000,
   killerMode: false,
+  theme: {
+    fixedCellBackground: { r: 33, g: 21, b: 4, a: 0.2 },
+    userCellBackground: { r: 72, g: 150, b: 134, a: 0.3 },
+    fixedHighlightBackground: { r: 248, g: 224, b: 129, a: 0.7 },
+    userHighlightBackground: { r: 191, g: 77, b: 252, a: 0.75 },
+    invalidCellBackground: { r: 255, g: 100, b: 100, a: 0.5 },
+    cellTextColor: { r: 0, g: 0, b: 0, a: 0.8 },
+    candidateTextColor: { r: 0, g: 0, b: 0, a: 0.4 },
+  },
 };
 
 class UserStorage {
@@ -111,6 +133,26 @@ class UserStorage {
       delete this.preferences.handwritingStrokes[key];
     }
     this.setPreferences();
+  }
+
+  getTheme(): Theme {
+    return {
+      ...defaultPreferences.theme,
+      ...this.preferences.theme,
+    };
+  }
+
+  setTheme(theme: Theme): void {
+    this.preferences.theme = theme;
+    this.setPreferences();
+    broadcast(Signal.UPDATE_THEME, theme);
+  }
+
+  updateTheme(partial: Partial<Theme>): void {
+    this.setTheme({
+      ...this.getTheme(),
+      ...partial,
+    });
   }
 }
 

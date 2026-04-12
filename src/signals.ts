@@ -1,13 +1,16 @@
+import { Theme } from "./storage";
 import { Difficulty } from "./types/difficulty";
 
 export enum Signal {
   SHOW_SETTINGS,
   NEW_GAME,
+  UPDATE_THEME,
 }
 
 export type SIGNALS = {
   [Signal.SHOW_SETTINGS]: [],
   [Signal.NEW_GAME]: [difficulty: Difficulty, killerMode: boolean],
+  [Signal.UPDATE_THEME]: [theme: Theme],
 };
 
 type Listener<S extends Signal> = (...args: SIGNALS[S]) => void;

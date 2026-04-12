@@ -3,6 +3,8 @@ import React from "react";
 import { DIALOG_STYLE, PRIMARY_BUTTON, SECONDARY_BUTTON } from "./style";
 import { broadcast, Signal, subscribe } from "./signals";
 import { ColorSelect } from "./settings/color_picker";
+import { Theme, userStorage } from "./storage";
+import { colorToString } from "./colour";
 
 interface SettingsProps {
   onOpenChange?: (open: boolean) => void;
@@ -10,6 +12,37 @@ interface SettingsProps {
 
 interface SettingsState {
 }
+
+const COLOR_SETTINGS: { label: string; themeKey: keyof Theme; }[] = [
+  {
+    label: 'Pre-filled cell border',
+    themeKey: 'fixedCellBackground',
+  },
+  {
+    label: 'User-filled cell border',
+    themeKey: 'userCellBackground',
+  },
+  {
+    label: 'Pre-filled cell highlight',
+    themeKey: 'fixedHighlightBackground',
+  },
+  {
+    label: 'User-filled cell highlight',
+    themeKey: 'userHighlightBackground',
+  },
+  {
+    label: 'Invalid cell background',
+    themeKey: 'invalidCellBackground',
+  },
+  {
+    label: 'Cell text color',
+    themeKey: 'cellTextColor',
+  },
+  {
+    label: 'Candidate text color',
+    themeKey: 'candidateTextColor',
+  },
+];
 
 export class SettingsDialog extends React.Component<SettingsProps, SettingsState> {
   ref: React.RefObject<HTMLDialogElement | null> = React.createRef();
@@ -35,25 +68,34 @@ export class SettingsDialog extends React.Component<SettingsProps, SettingsState
 
   render() {
     return (
-      <dialog ref={this.ref} style={DIALOG_STYLE}>
+      <dialog ref={this.ref} style={{
+        ...DIALOG_STYLE,
+        bottom: '-25vh',
+        top: 'unset',
+      }}>
         <div style={{
           padding: '1rem',
           display: 'flex',
           flexDirection: 'column',
         }}>
           <h1>Settings</h1>
-          <div>
-            <h2>Pre-filled cell border</h2>
-            <ColorSelect defaultValue="rgba(33, 21, 4, 0.2)" onChange={(color) => {
-              console.log('color changed', color);
-            }} />
-          </div>
-          <hr />
-          <div>
-            <h2>User-filled cell border</h2>
-            <ColorSelect defaultValue="rgba(72, 150, 134, 0.3)" onChange={(color) => {
-              console.log('color changed', color);
-            }} />
+          <div style={{
+            overflowY: 'scroll',
+            maxHeight: '40vh',
+          }}>
+            {
+              COLOR_SETTINGS.map(({ label, themeKey }, index, arr) => (
+                <div key={themeKey}>
+                  <h2>{label}</h2>
+                  <ColorSelect
+                    defaultValue={colorToString(userStorage.getTheme()[themeKey])}
+                    onChange={(color) => {
+                      userStorage.updateTheme({ [themeKey]: color });
+                    }} />
+                  {(index < arr.length - 1) && <hr />}
+                </div>
+              ))
+            }
           </div>
           <Button
             className={PRIMARY_BUTTON}
