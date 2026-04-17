@@ -40,14 +40,14 @@ describe('useRecognitionToast', () => {
     });
   });
 
-  it('falls back to candidates[] when remoteCandidates is undefined', () => {
+  it('omits remote when remoteCandidates is undefined', () => {
     const { result } = renderHook(() => useRecognitionToast());
 
     act(() => {
       result.current.showCandidates(makeOutcome({ remoteCandidates: undefined }));
     });
 
-    expect(result.current.candidates?.remote).toEqual(['3', '8']);
+    expect(result.current.candidates?.remote).toBeUndefined();
   });
 
   it('auto-clears candidates after 4000 ms', () => {

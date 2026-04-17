@@ -14,7 +14,7 @@ export const useRecognitionToast = () => {
   const showCandidates = React.useCallback((outcome: RecognitionOutcome) => {
     setCandidates({
       local: outcome.localCandidates,
-      remote: outcome.remoteCandidates ?? outcome.candidates,
+      remote: outcome.remoteCandidates,
     });
 
     if (timeoutRef.current != null) {
