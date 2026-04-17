@@ -12,6 +12,7 @@ import { NoteLayer } from '@app/types/notes';
 import { getNewBoard, recomputeValidity } from '@app/game/boardState';
 import { useResetApp } from '@app/hooks/useResetApp';
 import { useRecognitionToast } from '@app/hooks/useRecognitionToast';
+import { useInstallPrompt } from '@app/hooks/useInstallPrompt';
 import { RecognitionToast } from '@app/RecognitionToast';
 import { getHint, MoveStrategy } from '@app/hints';
 import { VictoryDialog } from './victory';
@@ -21,6 +22,7 @@ import { broadcast, Signal } from './signals';
 function App() {
   const controlsRef = React.useRef<Controls | null>(null);
   const victoryRef = React.useRef<VictoryDialog | null>(null);
+  const { canInstall, triggerInstall } = useInstallPrompt();
   const [cells, setCells] = React.useState<SudokuBoard>(() => {
     const stored = userStorage.getBoardState();
     if (stored) {
@@ -222,6 +224,8 @@ function App() {
                   });
                 }}
                 canUndo={history.length > 0}
+                canInstall={canInstall}
+                onInstall={triggerInstall}
               />
               {hintText && (
                 <div className="w-full rounded-2xl bg-white p-3 shadow-md ring-1 ring-slate-200">

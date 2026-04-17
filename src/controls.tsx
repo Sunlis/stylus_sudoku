@@ -17,6 +17,8 @@ interface ControlsProps {
   onDrawCandidates: () => void;
   onResetApp: () => void;
   onCopyDebug: () => void;
+  onInstall?: () => void;
+  canInstall?: boolean;
 }
 
 interface ControlsState {
@@ -183,6 +185,17 @@ export class Controls extends React.Component<ControlsProps, ControlsState> {
             borderRadius: '0.75rem',
           }}>
             <h2 className="text-base font-semibold text-slate-900" style={{ padding: 0, margin: 0 }}>More actions</h2>
+            {this.props.canInstall && (
+              <Button
+                className={PRIMARY_BUTTON}
+                onPress={() => {
+                  this.overflowDialogRef.current?.close();
+                  this.props.onInstall?.();
+                }}
+              >
+                Install app
+              </Button>
+            )}
             <Button
               className={PRIMARY_BUTTON}
               onPress={() => {
