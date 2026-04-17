@@ -32,8 +32,8 @@ function traceToTensor(trace: Trace, size = 28): tf.Tensor4D {
 
   ctx.clearRect(0, 0, size, size);
   ctx.strokeStyle = 'black';
-  ctx.lineWidth = 2;
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   // Compute bounding box over all strokes
   let minX = Infinity;
@@ -67,6 +67,11 @@ function traceToTensor(trace: Trace, size = 28): tf.Tensor4D {
   ctx.translate(offsetX, offsetY);
   ctx.scale(scale, scale);
   ctx.translate(-minX, -minY);
+  // Set lineWidth after the scale transform so it stays ~12% of the canvas
+  // size (≈3.4 px on a 28×28 canvas) regardless of the original trace bounds.
+  // Without this compensation the effective width is `2 * scale`, which is
+  // nearly sub-pixel when a digit is drawn across a large screen area.
+  ctx.lineWidth = (size * 0.12) / scale;
 
   trace.forEach(([xs, ys]) => {
     if (!xs.length) return;
