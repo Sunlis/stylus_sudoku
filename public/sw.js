@@ -1,9 +1,14 @@
-const CACHE_NAME = 'stylus-sudoku-cache-v4';
+const CACHE_NAME = 'stylus-sudoku-cache-v5';
 
 self.addEventListener('install', (event) => {
-  // Fast install: don't precache anything here to avoid install failures
-  // during dev if the dev server isn't ready. We'll cache on first use.
-  self.skipWaiting();
+  // Precache the app shell on install so the app is available offline
+  // immediately after a SW update, without needing a prior full page load.
+  const scope = self.registration.scope;
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll([scope, `${scope}manifest.webmanifest`]))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -16,35 +21,38 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
+  const { request } = event;
   if (request.method !== 'GET') return;
-  // For navigations (address bar, home screen icon), serve the app shell
-  // so we don't show the browser's offline error page.
+
   if (request.mode === 'navigate') {
-    const appShellUrl = self.registration.scope;
+    // Stale-while-revalidate for navigation: serve the cached shell
+    // immediately (so the app loads offline), then update the cache in the
+    // background during online visits. A cached version takes precedence
+    // over the live version; clear app data to force an update.
+    const scope = self.registration.scope;
     event.respondWith(
-      (async () => {
-        try {
-          // Network-first: if online, fetch the real page and cache it
-          const networkResponse = await fetch(request);
-          const cache = await caches.open(CACHE_NAME);
-          // Cache the root shell so future offline launches have something
-          cache.put(appShellUrl, networkResponse.clone());
-          return networkResponse;
-        } catch (e) {
-          // Offline or network error: fall back to cached shell if we have it
-          const cachedRoot = await caches.match(appShellUrl);
-          if (cachedRoot) {
-            return cachedRoot;
-          }
-          return new Response('Offline', { status: 503 });
-        }
-      })()
+      caches.match(scope).then((cached) => {
+        const networkUpdate = fetch(request)
+          .then((response) => {
+            if (response.ok) {
+              caches.open(CACHE_NAME).then((cache) => cache.put(scope, response.clone()));
+            }
+            return response;
+          })
+          .catch(() => null);
+
+        return cached
+          ?? networkUpdate.then((r) => r ?? new Response(
+            'Offline – please open the app while connected first.',
+            { status: 503, headers: { 'Content-Type': 'text/plain' } },
+          ));
+      })
     );
     return;
   }
 
-  // For other GETs (JS/CSS/assets), use cache-first then network + cache.
+  // Cache-first for all other assets (JS, CSS, images, model files, etc.).
+  // Hashed filenames are immutable, so no revalidation is needed.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) {
@@ -53,9 +61,7 @@ self.addEventListener('fetch', (event) => {
       return fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, copy);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
         .catch(() => new Response('Offline', { status: 503 }));
