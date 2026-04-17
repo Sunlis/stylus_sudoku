@@ -213,6 +213,7 @@ export function createKillerAreas(solution: Board): KillerArea[] {
   while (open.size > 0) {
     const [start] = open;
     const cells = [start];
+    let sum: number = start.value!;
     open.delete(start);
 
     // Do a DFS to find all connected cells.
@@ -228,15 +229,18 @@ export function createKillerAreas(solution: Board): KillerArea[] {
         solution.grid[current.row]?.[current.col + 1],
       ];
       for (const neighbor of neighbors) {
-        if (neighbor && open.has(neighbor) && cells.length < 6 && Math.random() < 0.5) {
+        if (neighbor
+          && open.has(neighbor)
+          && cells.length < 6
+          && Math.random() > sum / 20) {
           open.delete(neighbor);
           stack.push(neighbor);
           cells.push(neighbor);
+          sum += neighbor.value!;
         }
       }
     }  // while (stack.length > 0)
 
-    const sum = cells.reduce((acc, c) => acc + (solution.grid[c.row][c.col].value ?? 0), 0);
     out.push({ cells, sum });
   }
 
